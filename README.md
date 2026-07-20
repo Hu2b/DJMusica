@@ -12,13 +12,15 @@ Real-time multiplayer muziekquiz op basis van Spotify-afspeellijsten. Zie `/docs
 
 ## Projectstructuur
 
+```
 djmusica/
-├── backend/          Node.js: Game Engine, Auth Service, Answer Matcher, Track Picker, etc.
+├── backend/            Node.js: Game Engine, Auth Service, Answer Matcher, Track Picker, etc.
 │   └── src/
-│       └── matcher/   Answer Matcher (FR-17, FR-18) — eerste werkende onderdeel
-├── frontend/         (nog te bouwen) React-app voor speler-/spelleiderschermen
-├── docs/             alle ontwerpdocumenten
-└── .github/workflows/ CI: lint + test bij elke push/PR
+│       └── matcher/     Answer Matcher (FR-17, FR-18) - eerste werkende onderdeel
+├── frontend/           (nog te bouwen) React-app voor speler-/spelleiderschermen
+├── docs/                alle ontwerpdocumenten
+└── .github/workflows/   CI: lint + test bij elke push/PR
+```
 
 ## Status
 
@@ -29,10 +31,12 @@ djmusica/
 
 ## Aan de slag
 
+```
 cd backend
 npm install
 npm test
 npm run lint
+```
 
 ## Volgende stappen (zie docs/bouwplan.md, Fase 0 en 4)
 
