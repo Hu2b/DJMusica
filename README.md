@@ -12,3 +12,30 @@ Real-time multiplayer muziekquiz op basis van Spotify-afspeellijsten. Zie `/docs
 
 ## Projectstructuur
 
+djmusica/
+├── backend/          Node.js: Game Engine, Auth Service, Answer Matcher, Track Picker, etc.
+│   └── src/
+│       └── matcher/   Answer Matcher (FR-17, FR-18) — eerste werkende onderdeel
+├── frontend/         (nog te bouwen) React-app voor speler-/spelleiderschermen
+├── docs/             alle ontwerpdocumenten
+└── .github/workflows/ CI: lint + test bij elke push/PR
+
+## Status
+
+- ✅ Answer Matcher (fuzzy tekstmatching + jaar-tolerantie) — werkend, 18 unit tests, 100% van de functies gedekt.
+- ✅ CI-pipeline (lint + test + coverage-artefact) opgezet.
+- ⬜ Auth Service (FR-33 t/m 35) — volgende stap, zie `docs/bouwplan.md` Fase 4.
+- ⬜ Frontend, Game Engine, Spotify-integratie, beheerder-tools, statistieken, berichten, PWA — zie bouwplan voor de volledige volgorde.
+
+## Aan de slag
+
+cd backend
+npm install
+npm test
+npm run lint
+
+## Volgende stappen (zie docs/bouwplan.md, Fase 0 en 4)
+
+1. Regel de Fase 0-accounts: Oracle Cloud Free Tier-VM, e-mailservice (Brevo/Resend), Spotify Developer-account.
+2. Zet branch protection aan op `main` zodat de CI-check verplicht is vóór mergen.
+3. Ga verder met stap 1 uit Fase 4: Accounts & inloggen (FR-33 t/m 35).
