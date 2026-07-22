@@ -13,6 +13,9 @@ begrijpen, te testen en later te vervangen.
 | `pwnedPasswords.js` | De gratis check "staat dit wachtwoord in een bekend lek?". Slim gebouwd: je wachtwoord verlaat nooit onze server. (FR-56) |
 | `passwordHasher.js` | Zet een wachtwoord om in een onomkeerbare code ("hash"). We bewaren nooit het leesbare wachtwoord. (NFR-11) |
 | `tokenStore.js` | Maakt en controleert de eenmalige links die we mailen (bevestig-link, reset-link): willekeurig, één keer bruikbaar, met vervaltijd. (FR-34/55) |
+| `loginThrottle.js` | De oplopende wachttijd na 5 mislukte inlogpogingen, slim per account + apparaat/IP. (FR-35) |
+| `sessionStore.js` | Houdt bij welke apparaten ingelogd zijn; kan er één of allemaal tegelijk uitloggen. (FR-34/57) |
+| `sessionLifetime.js` | Rekent uit of een sessie nog actief is, moet waarschuwen (60-seconden-afteller), of is verlopen — nooit tijdens een spel. (FR-57) |
 | `userStore.js` | Bewaart de accounts. Nu nog in het werkgeheugen; later een echte database, zonder dat de rest hoeft te veranderen. |
 | `securityLog.js` | De "rookmelder": legt beveiligingsgebeurtenissen vast (mislukte login, reset, …) — nooit met wachtwoorden of tokens erin. (NFR-14) |
 | `authService.js` | De dirigent: rijgt bovenstaande onderdelen aan elkaar tot de echte handelingen (registreren, verifiëren, …). |

@@ -87,6 +87,17 @@ function createAuthTestHarness({ pwned = [], now = createFakeClock() } = {}) {
   const mailer = createFakeMailer();
   const pwnedChecker = createFakePwnedChecker(pwned);
 
+  // Nep "zit deze gebruiker in een actief spel?"-schakelaar (FR-57). Standaard
+  // niemand in een spel; een test kan het aanzetten via gameState.setInGame().
+  const inSpel = new Set();
+  const gameState = {
+    setInGame(userId, aan = true) {
+      if (aan) inSpel.add(userId);
+      else inSpel.delete(userId);
+    },
+  };
+  const isUserInActiveGame = (userId) => inSpel.has(userId);
+
   const auth = new AuthService({
     userStore,
     tokenStore,
@@ -95,6 +106,7 @@ function createAuthTestHarness({ pwned = [], now = createFakeClock() } = {}) {
     pwnedChecker,
     loginThrottle,
     sessionStore,
+    isUserInActiveGame,
     now,
   });
 
@@ -118,6 +130,7 @@ function createAuthTestHarness({ pwned = [], now = createFakeClock() } = {}) {
     securityLog,
     mailer,
     pwnedChecker,
+    gameState,
     now,
     maakGeverifieerdAccount,
   };
