@@ -1,8 +1,9 @@
 # Afhankelijkheden (worden via npm install opgehaald)
 node_modules/
 
-# Testresultaten / coverage (worden bij elke run opnieuw gegenereerd)
+# Testresultaten / coverage / testrapporten (worden bij elke run opnieuw gegenereerd)
 coverage/
+reports/
 
 # Logs en tijdelijke bestanden
 *.log
