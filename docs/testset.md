@@ -38,6 +38,83 @@ Feature: Registreren en inloggen
     When ik de link open
     Then kan ik direct ter plekke registreren, zonder aparte omweg
 
+Feature: E-mailverificatie en wachtwoordeisen (FR-55, FR-56)
+
+  Scenario: Account pas bruikbaar na e-mailverificatie
+    Given ik registreer met een nieuw e-mailadres
+    Then ontvang ik een verificatiemail met een eenmalige link (24 uur geldig)
+    And kan ik niet meespelen of hosten zolang ik niet op de link heb geklikt
+    When ik op de verificatielink klik
+    Then is mijn account volledig bruikbaar
+
+  Scenario: Registreren met een al bestaand e-mailadres onthult niets
+    Given e-mailadres "sanne@example.com" heeft al een account
+    When iemand opnieuw probeert te registreren met "sanne@example.com"
+    Then is de getoonde melding identiek aan die van een gewone nieuwe registratie
+    And ontvangt de bestaande eigenaar een informatieve mail, geen nieuw account
+
+  Scenario: Te kort wachtwoord wordt geweigerd
+    When ik registreer met wachtwoord "kort1"
+    Then wordt dit geweigerd met de uitleg dat minimaal 8 tekens vereist zijn
+
+  Scenario: Bekend gelekt wachtwoord wordt geweigerd
+    When ik registreer met een wachtwoord dat voorkomt in de lijst van gelekte wachtwoorden (bv. "welkom123")
+    Then wordt dit geweigerd met een begrijpelijke uitleg
+
+Feature: Veilige wachtwoord-reset en lockout (aangescherpte FR-34, FR-35)
+
+  Scenario: Resetmelding onthult niet of een adres bestaat
+    When ik "wachtwoord vergeten" gebruik met een onbekend e-mailadres
+    Then is de getoonde melding identiek aan die bij een bekend adres ("als dit adres bekend is, ontvang je een e-mail")
+
+  Scenario: Resetlink is eenmalig en kort geldig
+    Given ik heb een wachtwoord-resetlink ontvangen
+    When ik er 2 uur later pas op klik
+    Then is de link verlopen
+    Given ik gebruik een geldige link op tijd
+    When ik daarna dezelfde link nogmaals probeer
+    Then heeft die tweede poging geen effect
+
+  Scenario: Alle sessies uitgelogd na geslaagde reset
+    Given mijn account is op twee apparaten ingelogd
+    When ik via een resetlink een nieuw wachtwoord instel
+    Then zijn beide bestaande sessies uitgelogd en is opnieuw inloggen met het nieuwe wachtwoord nodig
+
+  Scenario: Lockout is niet te misbruiken om andermans account te blokkeren
+    Given een kwaadwillende logt vanaf zijn eigen verbinding 5 keer expres fout in op het account van "Sanne"
+    When Sanne daarna zelf vanaf haar eigen telefoon inlogt met het juiste wachtwoord
+    Then kan Sanne gewoon inloggen (de blokkade geldt per account+afzender-combinatie, niet voor het hele account)
+
+Feature: Uitloggen en sessieduur (FR-57)
+
+  Scenario: Aftelwaarschuwing 2 uur na inloggen, buiten actief spel
+    Given ik ben ingelogd en zit niet in een lopend spel
+    When er 2 uur zijn verstreken sinds mijn login (of laatste verlenging)
+    Then verschijnt een aankondiging dat ik over 60 seconden word uitgelogd, met een zichtbaar aftellende teller
+
+  Scenario: Knopdruk verlengt met opnieuw 2 uur
+    Given de 60-seconden-afteller loopt
+    When ik op "blijf ingelogd" druk
+    Then verdwijnt de waarschuwing
+    And verschijnt de volgende waarschuwing pas weer 2 uur later
+
+  Scenario: Geen reactie binnen 60 seconden betekent uitloggen
+    Given de 60-seconden-afteller loopt en ik druk op niets
+    When de teller 0 bereikt
+    Then word ik automatisch uitgelogd
+    And kan ik daarna gewoon opnieuw inloggen, zonder dataverlies
+
+  Scenario: Nooit automatisch uitloggen tijdens een actief spel
+    Given ik speel al 3 uur mee in een lopend spel
+    Then verschijnt er geen uitlog-waarschuwing en word ik niet uitgelogd zolang het spel loopt
+
+Feature: Beheerder-rol niet via de app verkrijgbaar (FR-58)
+
+  Scenario: Geen endpoint of knop voor rol-verhoging
+    Given ik ben ingelogd als gewone speler
+    When ik via de app (schermen of rechtstreekse API-aanroepen) probeer mezelf beheerder te maken
+    Then bestaat daar geen werkende mogelijkheid voor en blijft mijn rol ongewijzigd
+
 Feature: Account verwijderen (FR-44 t/m FR-49, NFR-13)
 
   Scenario: Verwijderverzoek vereist een ingelogde sessie
@@ -162,6 +239,30 @@ Feature: Eén actieve sessie per account (FR-3a)
     And spelleider "Bram" host op hetzelfde moment sessie "BBBB" met een geheel andere groep spelers
     Then lopen beide sessies onafhankelijk naast elkaar
     And heeft niemand uit sessie "AAAA" toegang tot of invloed op sessie "BBBB"
+```
+
+```gherkin
+Feature: Veilige join-codes (FR-59)
+
+  Scenario: Join-code voldoet aan de eisen
+    When een nieuwe sessie wordt aangemaakt
+    Then is de join-code minimaal 6 tekens lang
+    And bevat de code geen verwarrende tekens (geen 0/O of 1/I)
+
+  Scenario: Join-code vervalt bij sessiestart
+    Given sessie "ABC7XK" is gestart (voorbij de lobby-fase)
+    When iemand daarna de join-code probeert te gebruiken
+    Then wordt toegang geweigerd
+
+  Scenario: Join-code vervalt na 4 uur
+    Given een sessie is 4 uur geleden aangemaakt en nooit gestart
+    When iemand de join-code probeert te gebruiken
+    Then wordt toegang geweigerd
+
+  Scenario: Geautomatiseerd raden van codes wordt afgeremd
+    Given een client probeert in korte tijd veel verschillende join-codes
+    Then worden verdere pogingen tijdelijk geweigerd (rate-limiting)
+    And geeft elke ongeldige code dezelfde neutrale foutmelding
 ```
 
 ## 2. Berichten & feedback (FR-50 t/m FR-53)
@@ -545,6 +646,37 @@ Feature: Antwoorden geven en beoordelen (FR-15 t/m FR-19)
     Then krijgt deze deelnemer 1 punt erbij
 ```
 
+```gherkin
+Feature: Server-side spelvalidatie tegen valsspelen (FR-60, FR-61)
+
+  Scenario: Antwoord na sluiting wordt geweigerd
+    Given een ronde is zojuist gesloten (tijd verstreken of iedereen geantwoord)
+    When er alsnog een antwoord binnenkomt van een deelnemer
+    Then wordt dit antwoord geweigerd en telt het niet mee
+
+  Scenario: Reactietijd wordt door de server gemeten, niet door de telefoon
+    Given een deelnemer stuurt een antwoord met een zelfgerapporteerde (vervalste) supersnelle tijd
+    When de server het antwoord verwerkt
+    Then gebruikt de server uitsluitend het eigen ontvangstmoment minus het eigen rondestartmoment als reactietijd
+    And heeft de vervalste tijd geen invloed op de tie-break (FR-24)
+
+  Scenario: Laatste geldige antwoord binnen de tijd telt
+    Given een deelnemer stuurt binnen de antwoordperiode eerst "1998" en daarna "2003"
+    When de ronde sluit
+    Then telt alleen "2003", met de reactietijd van dat laatste antwoord
+
+  Scenario: Speler kan geen spelleider-acties sturen
+    Given "Tom" is een gewone speler in sessie "ABC7XK"
+    When Tom via de realtime-verbinding het commando "beëindig ronde nu" stuurt
+    Then wordt dit geweigerd (alleen de spelleider van deze sessie mag dat)
+    And wordt de geweigerde poging gelogd
+
+  Scenario: Berichten voor een andere sessie worden geweigerd
+    Given "Tom" zit in sessie "ABC7XK"
+    When Tom een antwoord probeert te sturen gericht op sessie "XYZ9QP"
+    Then wordt dit geweigerd en gelogd
+```
+
 ## 7. Resultaten & spelverloop
 
 ```gherkin
@@ -728,6 +860,28 @@ Feature: Beveiliging in lagen (NFR-13)
 ```
 
 ```gherkin
+Feature: Logging, alarmering en browserbeveiliging (NFR-14, NFR-15)
+
+  Scenario: Beveiligingsgebeurtenissen worden gelogd
+    Given een mislukte inlogpoging, een lockout, een wachtwoord-reset en een geweigerde WebSocket-actie vinden plaats
+    Then staat elk van deze gebeurtenissen in het beveiligingslog met tijdstip en betrokken account
+    And bevat het log nergens wachtwoorden of tokens
+
+  Scenario: Signalering bij afwijkend patroon
+    Given er is plotseling een piek van mislukte inlogpogingen
+    Then wordt hiervan een signaal/melding gegenereerd voor de beheerder
+
+  Scenario: Beveiligings-headers aanwezig
+    When een pagina van de app wordt opgevraagd
+    Then bevat het antwoord HSTS, Content-Security-Policy, anti-clickjacking en X-Content-Type-Options headers
+
+  Scenario: Rare artiestnaam uit Spotify kan geen script uitvoeren
+    Given een Spotify-playlist bevat een nummer met scripttekens in de titel of artiestnaam
+    When deze titel/artiestnaam ergens in de app wordt getoond
+    Then wordt de tekst letterlijk weergegeven en wordt er niets uitgevoerd
+```
+
+```gherkin
 Feature: Realtime sync en robuustheid (NFR-1, NFR-5)
 
   Scenario: Synchrone timer bij alle deelnemers
@@ -770,21 +924,23 @@ Concrete testcases om als unit tests te implementeren voor de fuzzy-match/jaar-t
 
 ## 11. Testuitvoering & bewaren van testbewijs
 
-### 9.1 Wanneer draaien de tests
+### 11.1 Wanneer draaien de tests
 - **Bij elke commit/pull request**: unit- en integratietests altijd; de belangrijkste BDD/E2E-scenario's (aanmelden, ronde-verloop, scoring) als snelle check.
-- **Nachtelijk/geplande volledige run**: alle Gherkin-scenario's uit dit document, inclusief de zwaardere multi-client E2E-scenario's (WebSocket-sync, reconnect, meerdere gelijktijdige sessies, sync met Spotify/MusicBrainz).
-- **Bij elke release/tag**: de volledige testset moet groen zijn; het testrapport van die run wordt bij de release gearchiveerd (zie 9.4).
+- **Nachtelijk/geplande volledige run**: alle Gherkin-scenario's uit dit document, inclusief de zwaardere multi-client E2E-scenario's (WebSocket-sync, reconnect, meerdere gelijktijdige sessies, sync met Spotify/MusicBrainz) én de systeemintegratietest hieronder.
+- **Systeemintegratietest van de gehele keten**: één geautomatiseerde run die het complete systeem als geheel doorloopt — registreren (incl. e-mailverificatie via een test-mailbox), inloggen, Spotify-app koppelen (gemockt), sessie aanmaken, spelers laten joinen, meerdere volledige rondes spelen t/m het eindscherm, en daarna controleren dat de statistieken kloppen. Dit draait tegen een echte database en Redis (in tijdelijke containers), met de externe API's (Spotify/MusicBrainz/e-mail) vervangen door testversies. Als onderdeel hiervan draaien ook **twee volledige spellen gelijktijdig** (verschillende spelleiders, verschillende spelers) om te bewijzen dat gelijktijdig spelen elkaar niet beïnvloedt (FR-38, NFR-3).
+- **Bij elke release/tag**: de volledige testset moet groen zijn; het testrapport van die run wordt bij de release gearchiveerd (zie 11.4).
 
-### 9.2 Tooling per testniveau
+### 11.2 Tooling per testniveau
 
 | Niveau | Voorstel tool | Dekt |
 |---|---|---|
 | Unit | Jest/Vitest | Answer Matcher (fuzzy-matching, jaar-tolerantie), Track Picker-cyclus-logica |
 | Integratie | Jest + test-doubles voor Spotify/MusicBrainz | Game Engine state machine, database-opslag, Playlist Sync Service |
 | BDD/E2E | Cucumber + Playwright (aparte browsercontext per client) | De scenario's uit secties 1 t/m 7 van dit document, met spelleider- én meerdere deelnemer-clients tegelijk |
+| Systeemintegratie (gehele keten) | Docker Compose-testomgeving (echte Postgres + Redis in containers) + Playwright, externe API's gemockt | Complete flow van registratie t/m eindscherm en statistieken, inclusief twee volledige spellen gelijktijdig (FR-38, NFR-3) |
 | Performance/NFR | k6 of Artillery (WebSocket-load) | NFR-1 (sync <1s), NFR-3 (meerdere sessies tegelijk) |
 
-### 9.3 CI/CD-pipeline (voorstel)
+### 11.3 CI/CD-pipeline (voorstel)
 
 ```mermaid
 flowchart LR
@@ -799,9 +955,10 @@ flowchart LR
     G -->|Nachtelijk| J[Volledige testset<br/>+ performance-tests]
 ```
 
-### 9.4 Testbewijs bewaren
+### 11.4 Testbewijs bewaren
 
 - Elke pipeline-run genereert: een JUnit/Cucumber-testrapport (pass/fail per scenario), een coverage-rapport, en bij falende E2E-tests een screenshot/video plus browser-consolelog van het moment van falen.
+- **Inhoud per testcase in het rapport**: elke testcase in het rapport vermeldt (1) een unieke naam/ID en korte omschrijving van de testcase, (2) de **gebruikte testdata** (de invoer, bv. "correct antwoord: Nirvana, gegeven antwoord: Nirvanaland"), (3) de **verwachte uitkomst**, en (4) de **werkelijke uitkomst** — zodat bij een verschil direct zichtbaar is wát er afweek, zonder de code in te hoeven duiken. Het rapport bestaat in twee vormen: machine-leesbaar (JUnit/Cucumber JSON, voor CI en trends) én een leesbaar overzicht (HTML) voor mensen.
 - Deze artefacten worden bewaard als CI-build-artefacten (bv. GitHub Actions Artifacts), met een bewaartermijn van bv. 90 dagen voor gewone commits — voldoende om een probleem terug te kunnen traceren zonder onbeperkt op te slaan.
 - Bij elke release/tag wordt het testrapport van die run **permanent** gearchiveerd (bv. als bijlage bij de GitHub Release, of in een aparte, langdurige opslaglocatie), zodat je achteraf altijd kunt aantonen welke tests slaagden bij welke versie — handig bij een latere bug-melding ("deed dit het al bij versie X?").
 - Scenario's in dit document worden getagd met hun FR/NFR-nummer (bv. `@FR-17`, `@NFR-1`), zodat het testrapport traceerbaarheid geeft: welke requirement door welke test gedekt is, en welke nog geen dekking heeft.
