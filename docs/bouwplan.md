@@ -61,12 +61,12 @@ Resultaat: een commit op `main` leidt automatisch tot een bijgewerkte, geteste o
 
 Niet alles tegelijk bouwen. Logische volgorde, elke stap bovenop de vorige, telkens met bijbehorende tests uit testset.md:
 
-1. **Accounts & inloggen** (FR-33 t/m 35, plus de securityreview-aanvullingen FR-55 t/m 57: e-mailverificatie, wachtwoordeisen, uitlog-/sessiegedrag) — de basis waar alles op leunt.
+1. **Accounts & inloggen** (FR-33 t/m 35, plus de securityreview-aanvullingen FR-55 t/m 57: e-mailverificatie, wachtwoordeisen, uitlog-/sessiegedrag) — de basis waar alles op leunt. ✅ **Gebouwd** in vier deelstappen, elk met eigen tests en pull request: (a) registreren + e-mailverificatie, (b) inloggen + lockout, (c) wachtwoord-reset, (d) sessieduur/aftelwaarschuwing. Zie testset.md §0.1 voor het testoverzicht en requirements.md beslissing 37 voor de gemaakte implementatiekeuzes (scrypt-hashing, in-memory opslag achter een vervangbare interface).
 2. **Beheerder: playlist toevoegen + verrijking** (FR-5a, FR-28, FR-30, FR-31) — zonder mooie UI, gewoon werkend krijgen dat een Spotify-URL nummers + landen (per artiest) oplevert, inclusief het combineren van gegevens uit meerdere bronnen tot één trackrecord (FR-30) en het "ververs"-mechanisme dat latere wijzigingen in de Spotify-playlist detecteert (FR-31).
 3. **Spelleider: Spotify-app koppelen** (FR-37) — nodig voordat er iets afgespeeld kan worden.
 4. **Kernspel-loop**: sessie aanmaken, lobby, ronde starten, antwoorden, scoren, eindscherm — inclusief de één-sessie-tegelijk-check (FR-1 t/m 24, FR-3a), het onthouden van spelleider-instellingen voor het volgende spel (FR-32), de veilige join-codes (FR-59), server-side spelvalidatie tegen valsspelen (FR-60) en WebSocket-autorisatie per bericht (FR-61). Dit is ook de stap waar de realtime-eisen (NFR-1: sync binnen ~1 seconde, NFR-5: verbinding herstellen zonder puntenverlies) waargemaakt moeten worden — dit is het hart van de app, pas hierna is er een "speelbaar" MVP.
 5. **Beheerder-UI verfijnen**: Bewerken-scherm (artiest-sortering, land-koppeling), Instellingen-scherm, landenkiezer (FR-5b t/m 5d, FR-28b t/m 28d).
-6. **Statistieken** (FR-39 t/m 43) — bouwt voort op data die al verzameld wordt door stap 4.
+6. **Statistieken** (FR-39 t/m 43, plus het live belastingsoverzicht met historie en drempel-mail uit FR-42a t/m 42c) — bouwt voort op data die al verzameld wordt door stap 4.
 7. **Account verwijderen** (FR-44 t/m 49) — bevestigingsmail, grace period, geanonimiseerde permanente verwijdering.
 8. **Berichten & feedback** (FR-50 t/m 53) — spelleider ↔ beheerder.
 9. **PWA-installeerbaarheid** (FR-54) — manifest.json, iconen, "Voeg toe aan beginscherm".
