@@ -10,6 +10,7 @@
 
 const { InMemoryUserStore } = require('./userStore');
 const { InMemoryTokenStore } = require('./tokenStore');
+const { InMemoryLoginThrottle } = require('./loginThrottle');
 const { SecurityLog } = require('./securityLog');
 const { AuthService } = require('./authService');
 
@@ -79,6 +80,7 @@ function createFakePwnedChecker(extra = []) {
 function createAuthTestHarness({ pwned = [], now = createFakeClock() } = {}) {
   const userStore = new InMemoryUserStore({ now });
   const tokenStore = new InMemoryTokenStore({ now });
+  const loginThrottle = new InMemoryLoginThrottle({ now });
   const securityLog = new SecurityLog({ now });
   const mailer = createFakeMailer();
   const pwnedChecker = createFakePwnedChecker(pwned);
@@ -89,10 +91,32 @@ function createAuthTestHarness({ pwned = [], now = createFakeClock() } = {}) {
     mailer,
     securityLog,
     pwnedChecker,
+    loginThrottle,
     now,
   });
 
-  return { auth, userStore, tokenStore, securityLog, mailer, pwnedChecker, now };
+  /**
+   * Hulpje voor tests: maak snel een geverifieerd, klaar-om-in-te-loggen account.
+   * @returns {Promise<{ userId: string }>}
+   */
+  async function maakGeverifieerdAccount({ email, password }) {
+    await auth.register({ email, password });
+    const verificatie = mailer.lastTo(email.toLowerCase(), 'verificatie');
+    await auth.verifyEmail({ rawToken: verificatie.rawToken });
+    return { userId: userStore.findByEmail(email).id };
+  }
+
+  return {
+    auth,
+    userStore,
+    tokenStore,
+    loginThrottle,
+    securityLog,
+    mailer,
+    pwnedChecker,
+    now,
+    maakGeverifieerdAccount,
+  };
 }
 
 module.exports = {
