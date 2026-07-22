@@ -1,0 +1,124 @@
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@700;800&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+.lg { --bg-deep:#1B1033; --bg-panel3:#38215F; --pink:#FF3D8A; --yellow:#FFD23F; --cyan:#2FE6D0; --ink:#FDFBFF; --muted:#B8ACD9;
+  font-family:'Manrope',sans-serif; color:var(--ink);
+  background:radial-gradient(circle at 25% 15%, #2A1750 0%, var(--bg-deep) 55%);
+  padding:2.5rem 1.5rem; border-radius:16px;
+}
+.lg * { box-sizing:border-box; }
+.lg .disp { font-family:'Baloo 2',sans-serif; }
+.lg-head { text-align:center; margin-bottom:2rem; }
+.lg-head .wordmark { font-family:'Baloo 2',sans-serif; font-weight:800; font-size:15px; letter-spacing:0.06em; color:var(--yellow); text-transform:uppercase; }
+.lg-head h1 { font-family:'Baloo 2',sans-serif; font-weight:800; font-size:26px; margin:6px 0 8px; }
+.lg-head p { color:var(--muted); font-size:13px; max-width:480px; margin:0 auto; line-height:1.6; }
+
+.lg-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:24px; max-width:1000px; margin:0 auto; }
+.lg-card { background:var(--bg-panel3); border:1px solid rgba(255,255,255,0.12); border-radius:16px; padding:24px; display:flex; flex-direction:column; align-items:center; gap:14px; }
+.lg-card.dark { background:#0E0A1F; }
+.lg-tag { font-size:11px; font-weight:700; color:var(--cyan); letter-spacing:0.03em; text-align:center; }
+
+.wordmark-text { font-family:'Baloo 2',sans-serif; font-weight:800; font-size:26px; letter-spacing:0.01em; }
+.wordmark-text .dj { color:var(--yellow); }
+.wordmark-text .musica { color:var(--ink); }
+
+.eqbar { }
+</style>
+
+<div class="lg">
+  <div class="lg-head">
+    <div class="wordmark">Logo-ontwerp</div>
+    <h1 class="disp">DJMusica</h1>
+    <p>Zelfde taal als de schermen: een vinyl-plaat met een play-teken als kern, felle spotlight-accenten (roze/geel/cyaan) en de ronde Baloo 2-belettering.</p>
+  </div>
+
+  <div class="lg-grid">
+
+    <!-- Horizontale lockup -->
+    <div class="lg-card" style="grid-column:1/-1;">
+      <div class="lg-tag">Horizontale lockup - primair gebruik</div>
+      <div style="display:flex; align-items:center; gap:16px;">
+        <svg width="72" height="72" viewBox="0 0 100 100">
+          <circle cx="46" cy="50" r="42" fill="#1B1033" stroke="#FF3D8A" stroke-width="3"/>
+          <circle cx="46" cy="50" r="32" fill="none" stroke="#38215F" stroke-width="2"/>
+          <circle cx="46" cy="50" r="24" fill="none" stroke="#38215F" stroke-width="2"/>
+          <circle cx="46" cy="50" r="15" fill="#FFD23F"/>
+          <path d="M42 43 L54 50 L42 57 Z" fill="#1B1033"/>
+          <rect x="80" y="38" width="6" height="14" rx="3" fill="#2FE6D0"/>
+          <rect x="90" y="30" width="6" height="30" rx="3" fill="#FF3D8A"/>
+          <rect x="100" y="42" width="6" height="10" rx="3" fill="#FFD23F"/>
+        </svg>
+        <div class="wordmark-text"><span class="dj">DJ</span><span class="musica">Musica</span></div>
+      </div>
+    </div>
+
+    <!-- Gestapelde lockup -->
+    <div class="lg-card">
+      <div class="lg-tag">Gestapelde lockup - vierkante ruimtes</div>
+      <svg width="80" height="80" viewBox="0 0 100 100">
+        <circle cx="50" cy="50" r="44" fill="#1B1033" stroke="#FF3D8A" stroke-width="3"/>
+        <circle cx="50" cy="50" r="33" fill="none" stroke="#38215F" stroke-width="2"/>
+        <circle cx="50" cy="50" r="24" fill="none" stroke="#38215F" stroke-width="2"/>
+        <circle cx="50" cy="50" r="15" fill="#FFD23F"/>
+        <path d="M46 43 L58 50 L46 57 Z" fill="#1B1033"/>
+      </svg>
+      <div class="wordmark-text" style="font-size:20px;"><span class="dj">DJ</span><span class="musica">Musica</span></div>
+    </div>
+
+    <!-- App-icoon (vierkant, donker) -->
+    <div class="lg-card dark">
+      <div class="lg-tag">App-icoon / favicon</div>
+      <svg width="88" height="88" viewBox="0 0 100 100">
+        <rect x="2" y="2" width="96" height="96" rx="24" fill="#1B1033"/>
+        <circle cx="50" cy="50" r="34" fill="none" stroke="#FF3D8A" stroke-width="3"/>
+        <circle cx="50" cy="50" r="24" fill="none" stroke="#38215F" stroke-width="2"/>
+        <circle cx="50" cy="50" r="14" fill="#FFD23F"/>
+        <path d="M46 44 L57 50 L46 56 Z" fill="#1B1033"/>
+      </svg>
+    </div>
+
+    <!-- App-icoon klein (favicon-simulatie) -->
+    <div class="lg-card dark">
+      <div class="lg-tag">Favicon op ware grootte (32px)</div>
+      <div style="display:flex; align-items:center; justify-content:center; height:88px;">
+        <svg width="32" height="32" viewBox="0 0 100 100">
+          <rect x="2" y="2" width="96" height="96" rx="24" fill="#1B1033"/>
+          <circle cx="50" cy="50" r="34" fill="none" stroke="#FF3D8A" stroke-width="5"/>
+          <circle cx="50" cy="50" r="14" fill="#FFD23F"/>
+          <path d="M45 42 L60 50 L45 58 Z" fill="#1B1033"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Monochrome variant -->
+    <div class="lg-card" style="background:var(--ink);">
+      <div class="lg-tag" style="color:#137C6E;">Monochroom - op lichte achtergrond</div>
+      <svg width="80" height="80" viewBox="0 0 100 100">
+        <circle cx="50" cy="50" r="44" fill="none" stroke="#1B1033" stroke-width="3"/>
+        <circle cx="50" cy="50" r="33" fill="none" stroke="#1B1033" stroke-width="1.5" opacity="0.4"/>
+        <circle cx="50" cy="50" r="24" fill="none" stroke="#1B1033" stroke-width="1.5" opacity="0.4"/>
+        <circle cx="50" cy="50" r="15" fill="#1B1033"/>
+        <path d="M46 43 L58 50 L46 57 Z" fill="#FDFBFF"/>
+      </svg>
+      <div class="wordmark-text" style="font-size:20px;"><span style="color:#1B1033;">DJ</span><span style="color:#1B1033;">Musica</span></div>
+    </div>
+
+    <!-- Op echte achtergrond (zoals in de app) -->
+    <div class="lg-card">
+      <div class="lg-tag">Voorbeeld op het lobby-scherm</div>
+      <div style="background:#241542; border-radius:14px; padding:16px; width:100%; display:flex; align-items:center; justify-content:space-between;">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <svg width="28" height="28" viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="44" fill="#1B1033" stroke="#FF3D8A" stroke-width="4"/>
+            <circle cx="50" cy="50" r="16" fill="#FFD23F"/>
+            <path d="M45 42 L60 50 L45 58 Z" fill="#1B1033"/>
+          </svg>
+          <span class="wordmark-text" style="font-size:14px;"><span class="dj">DJ</span><span class="musica">Musica</span></span>
+        </div>
+        <span style="background:#38215F; border:1px solid rgba(255,255,255,0.14); border-radius:999px; padding:4px 12px; font-size:11px; font-weight:700; color:#2FE6D0;">7F3K</span>
+      </div>
+    </div>
+
+  </div>
+</div>

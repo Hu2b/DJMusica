@@ -1,0 +1,835 @@
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+.mq { --bg-deep:#1B1033; --bg-panel:#241542; --bg-panel2:#2E1B54; --bg-panel3:#38215F;
+  --pink:#FF3D8A; --pink-dark:#B8215F; --yellow:#FFD23F; --yellow-dark:#B88A0E;
+  --cyan:#2FE6D0; --cyan-dark:#137C6E; --violet:#8B6BFF;
+  --ink:#FDFBFF; --muted:#B8ACD9; --line:rgba(255,255,255,0.14);
+  font-family:'Manrope',sans-serif; color:var(--ink);
+  background:radial-gradient(circle at 20% 10%, #2A1750 0%, var(--bg-deep) 55%);
+  padding:2.5rem 1.5rem; border-radius:16px;
+}
+.mq * { box-sizing:border-box; }
+.mq .disp { font-family:'Baloo 2',sans-serif; }
+.mq-head { text-align:center; margin-bottom:2rem; }
+.mq-head .wordmark { font-family:'Baloo 2',sans-serif; font-weight:800; font-size:15px; letter-spacing:0.06em; color:var(--yellow); text-transform:uppercase; }
+.mq-head h1 { font-family:'Baloo 2',sans-serif; font-weight:800; font-size:30px; margin:6px 0 8px; }
+.mq-head p { color:var(--muted); font-size:14px; max-width:560px; margin:0 auto; line-height:1.6; }
+
+.mq-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:28px; align-items:start; max-width:1180px; margin:0 auto; }
+.mq-block { display:flex; flex-direction:column; align-items:center; gap:12px; }
+.mq-block.wide { grid-column:1 / -1; }
+.mq-tag { font-size:12px; font-weight:700; color:var(--cyan); letter-spacing:0.03em; text-align:center; }
+.mq-tag b { color:var(--ink); }
+
+.mq-section { grid-column:1 / -1; margin:18px 0 -6px; text-align:center; }
+.mq-section .n { font-family:'Baloo 2',sans-serif; font-weight:800; font-size:12px; color:var(--bg-deep); background:var(--yellow); display:inline-block; padding:4px 14px; border-radius:999px; letter-spacing:0.04em; }
+.mq-section h2 { font-family:'Baloo 2',sans-serif; font-weight:700; font-size:20px; margin:10px 0 4px; }
+.mq-section p { font-size:13px; color:var(--muted); max-width:520px; margin:0 auto; }
+
+/* frames */
+.phone { width:230px; background:#0E0A1F; border-radius:34px; padding:10px; box-shadow:0 20px 40px rgba(0,0,0,0.45); }
+.phone .notch { width:60px; height:6px; background:#000; border-radius:6px; margin:0 auto 8px; }
+.screen { background:var(--bg-panel); border-radius:24px; overflow-y:auto; overflow-x:hidden; height:500px; display:flex; flex-direction:column; scrollbar-width:none; }
+.screen::-webkit-scrollbar { display:none; }
+.tv { width:100%; max-width:760px; background:#0E0A1F; border-radius:20px; padding:14px; box-shadow:0 24px 50px rgba(0,0,0,0.5); }
+.tv .screen { height:420px; border-radius:12px; }
+.tv-stand { width:90px; height:10px; background:#0E0A1F; margin:10px auto 0; border-radius:0 0 8px 8px; }
+
+.pad { padding:18px 16px; }
+.topbar { display:flex; justify-content:space-between; align-items:center; padding:14px 16px; border-bottom:1px solid var(--line); }
+.pill { background:var(--bg-panel3); border:1px solid var(--line); border-radius:999px; padding:4px 12px; font-size:11px; font-weight:700; color:var(--cyan); letter-spacing:0.03em; white-space:nowrap; flex:none; }
+.pill.done{ color:var(--cyan); } .pill.warn{ color:var(--yellow); } .pill.off{ color:var(--muted); }
+.brand-mini { font-family:'Baloo 2',sans-serif; font-weight:800; font-size:13px; color:var(--yellow); }
+
+/* avatars */
+.avatar { width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-family:'Baloo 2',sans-serif; font-weight:700; font-size:13px; color:#1B1033; flex:none; }
+.av-p{background:var(--pink)} .av-y{background:var(--yellow)} .av-c{background:var(--cyan)} .av-v{background:var(--violet)}
+.avatar-row { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; }
+
+/* buttons / chips */
+.btn { font-family:'Baloo 2',sans-serif; font-weight:700; font-size:14px; border:none; border-radius:14px; padding:12px 16px; cursor:default; text-align:center; display:flex; align-items:center; justify-content:center; gap:6px; }
+.btn-pink{ background:var(--pink); color:#3A0A24; }
+.btn-yellow{ background:var(--yellow); color:#3A2900; }
+.btn-cyan{ background:var(--cyan); color:#04322C; }
+.btn-outline{ background:transparent; border:1.5px solid var(--line); color:var(--ink); }
+.btn-ghost{ background:var(--bg-panel3); color:var(--ink); }
+.btn-wa { background:#25D366; color:#04321C; }
+
+/* form fields */
+.field { margin:0 16px 9px; }
+.field label { display:block; font-size:11px; color:var(--muted); margin-bottom:5px; font-weight:600; }
+.field .box { background:var(--bg-panel3); border:1px solid var(--line); border-radius:10px; padding:10px 12px; font-size:13px; color:var(--ink); }
+.field .box.ph { color:var(--muted); }
+
+/* toggle */
+.toggle-row { display:flex; align-items:center; justify-content:space-between; padding:10px 16px; }
+.toggle-row .lbl { font-size:13px; font-weight:600; }
+.toggle { width:40px; height:22px; border-radius:999px; background:var(--bg-panel3); position:relative; flex:none; }
+.toggle.on { background:var(--cyan); }
+.toggle .dot { width:16px; height:16px; border-radius:50%; background:var(--ink); position:absolute; top:3px; left:3px; }
+.toggle.on .dot { left:21px; background:#04322C; }
+
+/* stepper / pill-switch */
+.pillswitch { display:flex; background:var(--bg-panel3); border-radius:999px; padding:3px; margin:0 16px 12px; }
+.pillswitch .opt { flex:1; text-align:center; font-size:12px; font-weight:700; padding:7px 0; border-radius:999px; color:var(--muted); }
+.pillswitch .opt.sel { background:var(--pink); color:#3A0A24; }
+.stepper { display:flex; align-items:center; justify-content:space-between; margin:0 16px 12px; background:var(--bg-panel3); border-radius:10px; padding:6px 10px; }
+.stepper .sbtn { width:26px; height:26px; border-radius:8px; background:var(--bg-panel2); display:flex; align-items:center; justify-content:center; font-weight:800; font-family:'Baloo 2',sans-serif; }
+.stepper .sval { font-family:'Baloo 2',sans-serif; font-weight:800; font-size:15px; }
+
+/* sliders (static mock) */
+.slider-row { margin:0 16px 8px; }
+.slider-row .top { display:flex; justify-content:space-between; font-size:12px; margin-bottom:5px; }
+.slider-row .top .p { font-weight:800; color:var(--yellow); font-family:'Baloo 2',sans-serif; }
+.strack { height:8px; background:var(--bg-panel3); border-radius:6px; overflow:hidden; }
+.sfill { height:100%; border-radius:6px; }
+
+/* equalizer / vinyl */
+.stage { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:18px; padding:20px; text-align:center; }
+.qtype { font-family:'Baloo 2',sans-serif; font-weight:800; font-size:20px; color:var(--yellow); }
+.vinyl { width:130px; height:130px; border-radius:50%; background:conic-gradient(from 0deg, #2E1B54, #1B1033 30%, #2E1B54 60%, #1B1033); border:3px solid var(--pink); position:relative; display:flex; align-items:center; justify-content:center; animation:spin 4s linear infinite; }
+.vinyl::after { content:'?'; font-family:'Baloo 2',sans-serif; font-size:34px; font-weight:800; color:var(--yellow); background:var(--bg-deep); width:46px; height:46px; border-radius:50%; display:flex; align-items:center; justify-content:center; border:2px solid var(--cyan); }
+@keyframes spin { to { transform:rotate(360deg); } }
+.eq { display:flex; gap:5px; align-items:flex-end; height:34px; }
+.eq span { width:5px; background:var(--cyan); border-radius:3px; animation:bounce 0.9s ease-in-out infinite; }
+.eq span:nth-child(1){height:14px; animation-delay:0s;}
+.eq span:nth-child(2){height:30px; animation-delay:0.15s; background:var(--pink);}
+.eq span:nth-child(3){height:20px; animation-delay:0.3s;}
+.eq span:nth-child(4){height:34px; animation-delay:0.1s; background:var(--yellow);}
+.eq span:nth-child(5){height:18px; animation-delay:0.25s;}
+@keyframes bounce { 0%,100%{transform:scaleY(0.4)} 50%{transform:scaleY(1)} }
+.timer-badge { font-family:'Baloo 2',sans-serif; font-weight:800; font-size:13px; background:var(--bg-panel3); border:1px solid var(--pink); color:var(--pink); border-radius:999px; padding:5px 12px; }
+
+/* answer tiles */
+.opts { display:grid; grid-template-columns:1fr 1fr; gap:10px; padding:0 16px 16px; }
+.opt { border-radius:14px; padding:16px 8px; text-align:center; font-family:'Baloo 2',sans-serif; font-weight:700; font-size:16px; }
+.opt.o1{background:var(--pink); color:#3A0A24;} .opt.o2{background:var(--cyan); color:#04322C;}
+.opt.o3{background:var(--yellow); color:#3A2900;} .opt.o4{background:var(--violet); color:#1B1033;}
+.progress-track { height:6px; background:var(--bg-panel3); border-radius:4px; margin:0 16px 16px; overflow:hidden; }
+.progress-fill { height:100%; width:38%; background:var(--pink); border-radius:4px; }
+
+/* results */
+.result-flag { display:flex; align-items:center; gap:10px; justify-content:center; }
+.check { width:34px; height:34px; border-radius:50%; background:var(--cyan); display:flex; align-items:center; justify-content:center; flex:none; }
+.check svg { width:18px; height:18px; }
+.reveal-card { background:var(--bg-panel3); border:1px solid var(--line); border-radius:14px; padding:14px; margin:14px 16px; text-align:center; }
+.reveal-card .t { font-family:'Baloo 2',sans-serif; font-weight:700; font-size:15px; }
+.reveal-card .s { font-size:12px; color:var(--muted); margin-top:2px; }
+.rank-row { display:flex; align-items:center; gap:10px; padding:8px 16px; }
+.rank-row .name { flex:1; font-size:13px; font-weight:600; }
+.rank-row .score { font-family:'Baloo 2',sans-serif; font-weight:800; font-size:14px; color:var(--yellow); }
+.rank-num { width:16px; text-align:center; color:var(--muted); font-size:11px; flex:none; }
+.crown-icon { width:16px; height:16px; flex:none; }
+
+/* confetti */
+.confetti-wrap { position:relative; }
+.confetti { position:absolute; width:7px; height:11px; opacity:0.9; border-radius:2px; }
+
+/* spelleider big screen layout */
+.gm-body { display:grid; grid-template-columns:1.1fr 1fr; gap:0; flex:1; }
+.gm-left { padding:20px; border-right:1px solid var(--line); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px; text-align:center; }
+.gm-right { padding:16px; }
+.gm-right h4 { font-family:'Baloo 2',sans-serif; font-size:13px; color:var(--muted); margin:0 0 10px; text-transform:uppercase; letter-spacing:0.04em; }
+.gm-controls { display:flex; gap:10px; flex-wrap:wrap; padding:14px 20px; border-top:1px solid var(--line); }
+.answered-tick { width:16px; height:16px; border-radius:50%; background:var(--cyan); display:inline-flex; align-items:center; justify-content:center; flex:none; }
+.answered-wait { width:16px; height:16px; border-radius:50%; border:1.5px dashed var(--line); flex:none; }
+.pause-icon { display:flex; gap:3px; }
+.pause-icon span { width:3px; height:12px; background:var(--ink); border-radius:1px; }
+
+/* podium */
+.podium { display:flex; align-items:flex-end; justify-content:center; gap:10px; padding:20px 16px 0; }
+.pod-col { display:flex; flex-direction:column; align-items:center; gap:8px; flex:1; }
+.pod-bar { width:100%; border-radius:10px 10px 0 0; display:flex; align-items:flex-start; justify-content:center; padding-top:8px; font-family:'Baloo 2',sans-serif; font-weight:800; }
+.pod-1 .pod-bar { height:96px; background:var(--yellow); color:#3A2900; }
+.pod-2 .pod-bar { height:66px; background:var(--cyan); color:#04322C; }
+.pod-3 .pod-bar { height:44px; background:var(--pink); color:#3A0A24; }
+
+/* wizard */
+.step { display:flex; gap:10px; padding:7px 16px; align-items:flex-start; }
+.step .num { width:22px; height:22px; border-radius:50%; background:var(--bg-panel3); border:1px solid var(--line); color:var(--muted); font-family:'Baloo 2',sans-serif; font-weight:800; font-size:11px; display:flex; align-items:center; justify-content:center; flex:none; }
+.step .num.done { background:var(--cyan); border-color:var(--cyan); color:#04322C; }
+.step .txt { font-size:13px; }
+.step .txt .h { font-weight:700; margin-bottom:2px; }
+.step .txt .d { color:var(--muted); font-size:12px; }
+
+/* beheerder list */
+.list-row { display:flex; align-items:center; gap:10px; padding:10px 16px; border-bottom:1px solid var(--line); }
+.cover { width:36px; height:36px; border-radius:8px; flex:none; }
+.list-row .meta { flex:1; }
+.list-row .meta .t { font-size:13px; font-weight:700; }
+.list-row .meta .s { font-size:11px; color:var(--muted); }
+.badge { font-size:10px; font-weight:800; padding:3px 8px; border-radius:999px; }
+.badge.ok { background:rgba(47,230,208,0.18); color:var(--cyan); }
+.badge.warn { background:rgba(255,210,63,0.18); color:var(--yellow); }
+.row-actions { display:flex; gap:6px; flex:none; }
+.btn.sm { padding:6px 10px; font-size:11px; border-radius:10px; }
+
+/* beheerder: artiest-lijst */
+.artist-row { display:flex; align-items:center; gap:12px; padding:10px 16px; border-bottom:1px solid var(--line); }
+.artist-row .meta { flex:1; }
+.artist-row .meta .t { font-size:13px; font-weight:700; }
+.artist-row .meta .s { font-size:11px; color:var(--muted); }
+.artist-row .land { font-size:12px; color:var(--ink); display:flex; align-items:center; gap:6px; min-width:170px; }
+.artist-row .land.ph { color:var(--muted); font-style:italic; }
+.pct { font-family:'Baloo 2',sans-serif; font-weight:800; font-size:11px; padding:2px 7px; border-radius:999px; }
+.pct.ok { background:rgba(47,230,208,0.18); color:var(--cyan); }
+.pct.warn { background:rgba(255,210,63,0.18); color:var(--yellow); }
+
+/* statistieken */
+.stat-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; padding:16px; }
+.stat-card { background:var(--bg-panel3); border-radius:12px; padding:12px; text-align:center; }
+.stat-card .v { font-family:'Baloo 2',sans-serif; font-weight:800; font-size:22px; color:var(--yellow); }
+.stat-card .l { font-size:11px; color:var(--muted); margin-top:2px; }
+.compare { margin:6px 16px 14px; font-size:12px; color:var(--cyan); display:flex; align-items:center; gap:6px; }
+.compare .up { color:var(--cyan); font-size:10px; }
+.country-row { padding:10px 16px; border-bottom:1px solid var(--line); font-size:13px; }
+.country-row b { color:var(--yellow); font-weight:800; }
+
+/* berichten */
+.msg-row { padding:12px 16px; border-bottom:1px solid var(--line); display:flex; flex-direction:column; gap:4px; }
+.msg-row.unread { background:rgba(255,61,138,0.06); }
+.msg-from { font-size:12px; font-weight:700; display:flex; align-items:center; gap:6px; }
+.msg-body { font-size:13px; color:var(--ink); line-height:1.4; }
+.msg-time { font-size:11px; color:var(--muted); }
+.msg-row .btn.sm { align-self:flex-start; margin-top:2px; }
+.dot { width:7px; height:7px; border-radius:50%; background:var(--pink); display:inline-block; }
+</style>
+
+<div class="mq">
+  <div class="mq-head">
+    <div class="wordmark">Ontwerpvoorstel</div>
+    <h1 class="disp">DJMusica - complete schermenset</h1>
+    <p>Alle kernschermen in een keer, zelfde stijl door de hele app: donker podium-decor, felle spotlight-kleuren (roze / geel / cyaan), ronde speelse letters (Baloo 2) voor koppen naast een nette leesbare sans (Manrope) voor de rest.</p>
+  </div>
+
+  <div class="mq-grid">
+
+    <div class="mq-section"><span class="n">GROEP 1</span><h2 class="disp">Account &amp; toegang</h2><p>Inloggen, registreren en de Spotify-koppeling voor spelleiders.</p></div>
+
+    <!-- Inloggen -->
+    <div class="mq-block">
+      <div class="mq-tag">Inloggen</div>
+      <div class="phone"><div class="notch"></div>
+        <div class="screen">
+          <div style="text-align:center;padding:28px 16px 10px;">
+            <svg width="36" height="36" viewBox="0 0 100 100" style="margin-bottom:6px;">
+              <circle cx="50" cy="50" r="44" fill="#1B1033" stroke="#FF3D8A" stroke-width="6"/>
+              <circle cx="50" cy="50" r="16" fill="#FFD23F"/>
+              <path d="M45 42 L60 50 L45 58 Z" fill="#1B1033"/>
+            </svg>
+            <div class="brand-mini disp" style="font-size:18px;">DJMusica</div>
+          </div>
+          <div class="field"><label>E-mailadres</label><div class="box ph">naam@voorbeeld.nl</div></div>
+          <div class="field"><label>Wachtwoord</label><div class="box ph">........</div></div>
+          <div style="padding:4px 16px 10px;"><div class="btn btn-cyan" style="width:100%;">Inloggen</div></div>
+          <div style="text-align:center;font-size:12px;color:var(--muted);">Wachtwoord vergeten?</div>
+          <div style="text-align:center;font-size:12px;color:var(--muted);margin-top:6px;">Nog geen account? <span style="color:var(--cyan);font-weight:700;">Registreer</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Registreren -->
+    <div class="mq-block">
+      <div class="mq-tag">Registreren</div>
+      <div class="phone"><div class="notch"></div>
+        <div class="screen">
+          <div style="text-align:center;padding:18px 16px;border-bottom:1px solid var(--line);">
+            <div class="disp" style="font-size:12px;font-weight:800;color:var(--yellow);">Nieuw account</div>
+          </div>
+          <div class="field" style="margin-top:14px;"><label>Weergavenaam</label><div class="box ph">Bijv. Sanne</div></div>
+          <div class="field"><label>E-mailadres</label><div class="box ph">naam@voorbeeld.nl</div></div>
+          <div class="field"><label>Wachtwoord</label><div class="box ph">........</div></div>
+          <div class="field"><label>Herhaal wachtwoord</label><div class="box ph">........</div></div>
+          <div style="padding:4px 16px 10px;"><div class="btn btn-pink" style="width:100%;">Account aanmaken</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Wachtwoord vergeten -->
+    <div class="mq-block">
+      <div class="mq-tag">Wachtwoord vergeten</div>
+      <div class="phone"><div class="notch"></div>
+        <div class="screen">
+          <div style="text-align:center;padding:18px 16px;border-bottom:1px solid var(--line);">
+            <div class="disp" style="font-size:12px;font-weight:800;color:var(--yellow);">Wachtwoord kwijt?</div>
+          </div>
+          <div class="stage">
+            <div style="font-size:12px;color:var(--muted);max-width:170px;">Vul je e-mailadres in, we sturen een resetlink</div>
+            <div class="field" style="width:100%;margin:0;"><div class="box ph">naam@voorbeeld.nl</div></div>
+            <div class="btn btn-cyan" style="width:100%;">Verstuur resetlink</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Spotify koppelen wizard -->
+    <div class="mq-block">
+      <div class="mq-tag">Spelleider worden - Spotify koppelen</div>
+      <div class="phone"><div class="notch"></div>
+        <div class="screen">
+          <div class="topbar"><span class="brand-mini disp" style="font-size:12px;">Spotify koppelen</span><span class="pill done">Stap 2/3</span></div>
+          <div class="step"><div class="num done">1</div><div class="txt"><div class="h">Open Spotify Dashboard</div><div class="d">Maak daar je eigen gratis app aan</div></div></div>
+          <div class="step"><div class="num done">2</div><div class="txt"><div class="h">Kopieer redirect-URI</div><div class="d">Plak deze in het Spotify-formulier</div></div></div>
+          <div class="step"><div class="num">3</div><div class="txt"><div class="h">Vul Client ID / Secret in</div><div class="d">We testen de koppeling direct</div></div></div>
+          <div class="field"><label>Client ID</label><div class="box ph">plak hier...</div></div>
+          <div class="field"><label>Client Secret</label><div class="box ph">plak hier...</div></div>
+          <div style="padding:4px 16px 10px;"><div class="btn btn-yellow" style="width:100%;">Test koppeling</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Installeer op beginscherm -->
+    <div class="mq-block">
+      <div class="mq-tag">Voeg toe aan beginscherm (PWA)</div>
+      <div class="phone"><div class="notch"></div>
+        <div class="screen">
+          <div class="stage" style="flex:1;">
+            <svg width="56" height="56" viewBox="0 0 100 100">
+              <circle cx="50" cy="50" r="44" fill="#1B1033" stroke="#FF3D8A" stroke-width="5"/>
+              <circle cx="50" cy="50" r="33" fill="none" stroke="#38215F" stroke-width="2"/>
+              <circle cx="50" cy="50" r="16" fill="#FFD23F"/>
+              <path d="M45 42 L59 50 L45 58 Z" fill="#1B1033"/>
+            </svg>
+            <div class="disp" style="font-size:16px;font-weight:700;">Installeer DJMusica</div>
+            <div style="font-size:12px;color:var(--muted);max-width:180px;">Voeg toe aan je beginscherm voor snelle toegang, zonder browserbalk</div>
+          </div>
+          <div style="padding:16px;display:flex;gap:8px;">
+            <div class="btn btn-outline sm" style="flex:1;">Niet nu</div>
+            <div class="btn btn-pink sm" style="flex:1;">Toevoegen</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Resultaat: icoon op het beginscherm -->
+    <div class="mq-block">
+      <div class="mq-tag">Resultaat: icoon op het beginscherm</div>
+      <div class="phone"><div class="notch"></div>
+        <div class="screen" style="background:#000; padding:20px 16px;">
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;">
+            <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+              <div style="width:44px;height:44px;border-radius:12px;background:#3A3A3C;"></div>
+              <span style="font-size:9px;color:var(--muted);">Mail</span>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+              <div style="width:44px;height:44px;border-radius:12px;background:#3A3A3C;"></div>
+              <span style="font-size:9px;color:var(--muted);">Foto's</span>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+              <svg width="44" height="44" viewBox="0 0 100 100" style="border-radius:12px;">
+                <rect x="0" y="0" width="100" height="100" rx="22" fill="#1B1033"/>
+                <circle cx="50" cy="50" r="34" fill="none" stroke="#FF3D8A" stroke-width="6"/>
+                <circle cx="50" cy="50" r="14" fill="#FFD23F"/>
+                <path d="M46 44 L58 50 L46 56 Z" fill="#1B1033"/>
+              </svg>
+              <span style="font-size:9px;color:var(--ink);font-weight:700;">DJMusica</span>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+              <div style="width:44px;height:44px;border-radius:12px;background:#3A3A3C;"></div>
+              <span style="font-size:9px;color:var(--muted);">Agenda</span>
+            </div>
+          </div>
+          <div style="font-size:10px;color:var(--muted);text-align:center;padding-top:16px;">Het DJMusica-icoon staat nu tussen de andere apps</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mq-section"><span class="n">GROEP 2</span><h2 class="disp">Spelleider - spel opzetten</h2><p>Van sessie aanmaken tot instellingen, op het grote scherm.</p></div>
+
+    <!-- Sessie/lobby delen -->
+    <div class="mq-block wide">
+      <div class="mq-tag">Spelleider - sessie aanmaken &amp; delen</div>
+      <div class="tv"><div class="screen">
+        <div class="topbar"><span class="brand-mini disp">Nieuwe sessie</span><span class="pill">Sessiecode 7F3K</span></div>
+        <div class="gm-body">
+          <div class="gm-left">
+            <div class="disp" style="font-size:18px;">Deel de code met je vrienden</div>
+            <div class="btn btn-wa">WhatsApp delen</div>
+            <div style="font-size:12px;color:var(--muted);">of laat ze inloggen via muziekduel.app/join/7F3K</div>
+          </div>
+          <div class="gm-right">
+            <h4>Aangemeld (4)</h4>
+            <div class="rank-row"><div class="avatar av-p">S</div><span class="name">Sanne</span></div>
+            <div class="rank-row"><div class="avatar av-y">T</div><span class="name">Tom</span></div>
+            <div class="rank-row"><div class="avatar av-c">M</div><span class="name">Mila</span></div>
+            <div class="rank-row"><div class="avatar av-v">R</div><span class="name">Rik</span></div>
+          </div>
+        </div>
+        <div class="gm-controls"><div class="btn btn-pink">Aanmeldingen sluiten</div></div>
+      </div><div class="tv-stand"></div></div>
+    </div>
+
+    <!-- Playlist kiezen -->
+    <div class="mq-block wide">
+      <div class="mq-tag">Spelleider - afspeellijst kiezen</div>
+      <div class="tv"><div class="screen">
+        <div class="topbar"><span class="brand-mini disp">Kies een afspeellijst</span><span class="pill">4 beschikbaar</span></div>
+        <div class="pad" style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;">
+          <div style="background:var(--bg-panel3);border-radius:12px;border:2px solid var(--pink);padding:12px;text-align:center;">
+            <div style="height:60px;border-radius:8px;background:var(--pink);margin-bottom:8px;"></div>
+            <div style="font-size:12px;font-weight:700;">Jaren 80 Hits</div>
+            <div style="font-size:11px;color:var(--muted);">120 nummers</div>
+          </div>
+          <div style="background:var(--bg-panel3);border-radius:12px;border:1px solid var(--line);padding:12px;text-align:center;">
+            <div style="height:60px;border-radius:8px;background:var(--cyan);margin-bottom:8px;"></div>
+            <div style="font-size:12px;font-weight:700;">Global Hits 2026</div>
+            <div style="font-size:11px;color:var(--muted);">80 nummers</div>
+          </div>
+          <div style="background:var(--bg-panel3);border-radius:12px;border:1px solid var(--line);padding:12px;text-align:center;">
+            <div style="height:60px;border-radius:8px;background:var(--yellow);margin-bottom:8px;"></div>
+            <div style="font-size:12px;font-weight:700;">Nederlandstalig</div>
+            <div style="font-size:11px;color:var(--muted);">64 nummers</div>
+          </div>
+          <div style="background:var(--bg-panel3);border-radius:12px;border:1px solid var(--line);padding:12px;text-align:center;">
+            <div style="height:60px;border-radius:8px;background:var(--violet);margin-bottom:8px;"></div>
+            <div style="font-size:12px;font-weight:700;">Feestje!</div>
+            <div style="font-size:11px;color:var(--muted);">95 nummers</div>
+          </div>
+        </div>
+        <div class="gm-controls"><div class="btn btn-cyan">Verder</div></div>
+      </div><div class="tv-stand"></div></div>
+    </div>
+
+    <!-- Instellingen -->
+    <div class="mq-block">
+      <div class="mq-tag">Spelleider - instellingen</div>
+      <div class="phone"><div class="notch"></div>
+        <div class="screen">
+          <div class="topbar"><span class="brand-mini disp">Instellingen</span></div>
+          <div style="font-size:11px;color:var(--muted);padding:12px 16px 4px;font-weight:700;">MOEILIJKHEIDSGRAAD</div>
+          <div class="pillswitch"><div class="opt sel">Makkelijk</div><div class="opt">Moeilijk</div></div>
+          <div style="font-size:11px;color:var(--muted);padding:6px 16px 4px;font-weight:700;">PUNTEN OM TE WINNEN</div>
+          <div class="stepper"><div class="sbtn">-</div><div class="sval">15</div><div class="sbtn">+</div></div>
+          <div style="font-size:11px;color:var(--muted);padding:6px 16px 4px;font-weight:700;">SECONDEN PER RONDE</div>
+          <div class="stepper"><div class="sbtn">-</div><div class="sval">30</div><div class="sbtn">+</div></div>
+          <div class="toggle-row"><span class="lbl">Ik speel zelf mee</span><div class="toggle on"><div class="dot"></div></div></div>
+          <div style="padding:10px 16px;"><div class="btn btn-cyan" style="width:100%;">Volgende</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Vraagtype verdeling -->
+    <div class="mq-block">
+      <div class="mq-tag">Spelleider - vraagtype-verdeling</div>
+      <div class="phone"><div class="notch"></div>
+        <div class="screen">
+          <div class="topbar"><span class="brand-mini disp">Vraagtypes</span><span class="pill">100%</span></div>
+          <div class="slider-row"><div class="top"><span>Jaartal</span><span class="p">10%</span></div><div class="strack"><div class="sfill" style="width:10%;background:var(--pink)"></div></div></div>
+          <div class="slider-row"><div class="top"><span>Jaar +/- 3</span><span class="p">20%</span></div><div class="strack"><div class="sfill" style="width:20%;background:var(--cyan)"></div></div></div>
+          <div class="slider-row"><div class="top"><span>Decennium</span><span class="p">20%</span></div><div class="strack"><div class="sfill" style="width:20%;background:var(--yellow)"></div></div></div>
+          <div class="slider-row"><div class="top"><span>Titel</span><span class="p">20%</span></div><div class="strack"><div class="sfill" style="width:20%;background:var(--violet)"></div></div></div>
+          <div class="slider-row"><div class="top"><span>Artiest</span><span class="p">20%</span></div><div class="strack"><div class="sfill" style="width:20%;background:var(--pink)"></div></div></div>
+          <div class="slider-row"><div class="top"><span>Land van herkomst</span><span class="p">10%</span></div><div class="strack"><div class="sfill" style="width:10%;background:var(--cyan)"></div></div></div>
+          <div style="padding:6px 16px;display:flex;gap:8px;">
+            <div class="btn btn-outline" style="flex:1;font-size:12px;">Standaard</div>
+            <div class="btn btn-pink" style="flex:1;font-size:12px;">Start spel</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mq-section"><span class="n">GROEP 3</span><h2 class="disp">Speler - tijdens het spel</h2><p>Wat spelers zien op hun eigen telefoon.</p></div>
+
+    <!-- Lobby speler -->
+    <div class="mq-block">
+      <div class="mq-tag">Speler - lobby</div>
+      <div class="phone"><div class="notch"></div>
+        <div class="screen">
+          <div class="topbar"><span style="display:flex;align-items:center;gap:6px;"><svg width="18" height="18" viewBox="0 0 100 100" style="flex:none;"><circle cx="50" cy="50" r="44" fill="#1B1033" stroke="#FF3D8A" stroke-width="7"/><circle cx="50" cy="50" r="17" fill="#FFD23F"/><path d="M44 41 L61 50 L44 59 Z" fill="#1B1033"/></svg><span class="brand-mini disp">DJMusica</span></span><span class="pill">7F3K</span></div>
+          <div class="stage">
+            <div class="disp" style="font-size:17px;font-weight:700;">Wachten op de spelleider...</div>
+            <div class="avatar-row">
+              <div class="avatar av-p">S</div><div class="avatar av-y">T</div><div class="avatar av-c">M</div><div class="avatar av-v">R</div>
+            </div>
+            <div style="font-size:12px;color:var(--muted)">4 spelers klaar om te knallen</div>
+            <div class="eq"><span></span><span></span><span></span><span></span><span></span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Luisteren -->
+    <div class="mq-block">
+      <div class="mq-tag">Speler - luisteren &amp; raden</div>
+      <div class="phone"><div class="notch"></div>
+        <div class="screen">
+          <div class="topbar"><span class="brand-mini disp">Ronde 4</span><span class="timer-badge">18s</span></div>
+          <div class="stage">
+            <div class="qtype disp">In welk jaar?</div>
+            <div class="vinyl"></div>
+            <div class="eq"><span></span><span></span><span></span><span></span><span></span></div>
+            <div style="font-size:12px;color:var(--muted)">Luister goed, titel &amp; artiest blijven verborgen</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Antwoord MC -->
+    <div class="mq-block">
+      <div class="mq-tag">Speler - antwoord (makkelijk)</div>
+      <div class="phone"><div class="notch"></div>
+        <div class="screen">
+          <div class="topbar"><span class="brand-mini disp">Kies het jaartal</span><span class="timer-badge">09s</span></div>
+          <div style="flex:1;display:flex;flex-direction:column;justify-content:center;">
+            <div class="opts">
+              <div class="opt o1">1998</div><div class="opt o2">2003</div>
+              <div class="opt o3">2011</div><div class="opt o4">2016</div>
+            </div>
+          </div>
+          <div class="progress-track"><div class="progress-fill"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Antwoord vrije tekst -->
+    <div class="mq-block">
+      <div class="mq-tag">Speler - antwoord (moeilijk)</div>
+      <div class="phone"><div class="notch"></div>
+        <div class="screen">
+          <div class="topbar"><span class="brand-mini disp">Wie is de artiest?</span><span class="timer-badge">14s</span></div>
+          <div class="stage">
+            <div style="font-size:12px;color:var(--muted)">Typ je antwoord, kleine spelfouten mogen</div>
+            <div class="field" style="width:100%;margin:0;"><div class="box ph">Typ hier je antwoord...</div></div>
+            <div class="btn btn-pink" style="width:100%;">Versturen</div>
+          </div>
+          <div class="progress-track"><div class="progress-fill" style="width:60%;"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Resultaat -->
+    <div class="mq-block">
+      <div class="mq-tag">Speler - ronde-resultaat</div>
+      <div class="phone"><div class="notch"></div>
+        <div class="screen confetti-wrap">
+          <div class="confetti" style="left:14%;top:8%;background:var(--pink);transform:rotate(12deg)"></div>
+          <div class="confetti" style="left:70%;top:14%;background:var(--yellow);transform:rotate(-18deg)"></div>
+          <div class="confetti" style="left:45%;top:5%;background:var(--cyan);transform:rotate(30deg)"></div>
+          <div class="confetti" style="left:85%;top:20%;background:var(--violet);transform:rotate(-6deg)"></div>
+          <div class="pad" style="text-align:center;padding-top:24px;">
+            <div class="result-flag">
+              <div class="check"><svg viewBox="0 0 24 24" fill="none"><path d="M4 12l5 5L20 6" stroke="#04322C" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+              <div class="disp" style="font-size:20px;font-weight:800;color:var(--cyan)">Goed! +1</div>
+            </div>
+          </div>
+          <div class="reveal-card">
+            <div class="t">Blinding Lights</div>
+            <div class="s">The Weeknd - 2019</div>
+          </div>
+          <div style="padding-top:4px;">
+            <div class="rank-row">
+              <svg class="crown-icon" viewBox="0 0 24 24" fill="none"><path d="M3 8l4 3 5-6 5 6 4-3-2 10H5L3 8z" fill="#FFD23F"/></svg>
+              <span class="name">Sanne</span><span class="score">9</span>
+            </div>
+            <div class="rank-row"><span class="rank-num">2</span><span class="name">Tom</span><span class="score">7</span></div>
+            <div class="rank-row"><span class="rank-num">3</span><span class="name">Mila</span><span class="score">6</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mq-section"><span class="n">GROEP 4</span><h2 class="disp">Spelleider - groot scherm &amp; eindscherm</h2><p>Wat er op de TV/laptop van de spelleider te zien is.</p></div>
+
+    <!-- Spelleider groot scherm -->
+    <div class="mq-block wide">
+      <div class="mq-tag">Spelleider - tijdens de ronde</div>
+      <div class="tv"><div class="screen">
+        <div class="topbar"><span style="display:flex;align-items:center;gap:6px;"><svg width="18" height="18" viewBox="0 0 100 100" style="flex:none;"><circle cx="50" cy="50" r="44" fill="#1B1033" stroke="#FF3D8A" stroke-width="7"/><circle cx="50" cy="50" r="17" fill="#FFD23F"/><path d="M44 41 L61 50 L44 59 Z" fill="#1B1033"/></svg><span class="brand-mini disp">DJMusica - sessie 7F3K</span></span><span class="pill">Eerste tot 15 punten</span></div>
+        <div class="gm-body">
+          <div class="gm-left">
+            <div class="qtype disp" style="font-size:22px;">Ronde 4 - Jaartal</div>
+            <div class="eq" style="transform:scale(1.3);"><span></span><span></span><span></span><span></span><span></span></div>
+            <div class="disp" style="font-size:34px;font-weight:800;color:var(--pink)">00:18</div>
+            <div style="font-size:12px;color:var(--muted)">Afspelend op Spotify - verborgen voor iedereen</div>
+          </div>
+          <div class="gm-right">
+            <h4>Live antwoorden</h4>
+            <div class="rank-row"><span class="answered-tick"></span><span class="name">Sanne</span><span class="score">8</span></div>
+            <div class="rank-row"><span class="answered-tick"></span><span class="name">Tom</span><span class="score">7</span></div>
+            <div class="rank-row"><span class="answered-wait"></span><span class="name">Mila</span><span class="score">6</span></div>
+            <div class="rank-row"><span class="answered-wait"></span><span class="name">Rik</span><span class="score">4</span></div>
+          </div>
+        </div>
+        <div class="gm-controls">
+          <div class="btn btn-pink">Beeindig ronde nu</div>
+          <div class="btn btn-outline">Volgende ronde</div>
+          <div class="btn btn-ghost"><span class="pause-icon"><span></span><span></span></span>Pauze</div>
+        </div>
+      </div><div class="tv-stand"></div></div>
+    </div>
+
+    <!-- Spelleider op iPhone -->
+    <div class="mq-block">
+      <div class="mq-tag">Spelleider - zelfde scherm op iPhone</div>
+      <div class="phone"><div class="notch"></div>
+        <div class="screen">
+          <div class="topbar"><span class="brand-mini disp" style="font-size:11px;">Sessie 7F3K</span><span class="pill" style="font-size:10px;">Tot 15 pt</span></div>
+          <div class="gm-left" style="border-right:none; border-bottom:1px solid var(--line); padding:16px;">
+            <div class="qtype disp" style="font-size:17px;">Ronde 4 - Jaartal</div>
+            <div class="eq"><span></span><span></span><span></span><span></span><span></span></div>
+            <div class="disp" style="font-size:26px;font-weight:800;color:var(--pink)">00:18</div>
+          </div>
+          <div class="gm-right" style="padding:12px 16px;">
+            <h4 style="font-size:11px;">Live antwoorden</h4>
+            <div class="rank-row" style="padding:5px 0;"><span class="answered-tick"></span><span class="name">Sanne</span><span class="score">8</span></div>
+            <div class="rank-row" style="padding:5px 0;"><span class="answered-tick"></span><span class="name">Tom</span><span class="score">7</span></div>
+            <div class="rank-row" style="padding:5px 0;"><span class="answered-wait"></span><span class="name">Mila</span><span class="score">6</span></div>
+          </div>
+          <div class="gm-controls" style="flex-wrap:wrap;padding:10px 16px;">
+            <div class="btn btn-pink sm" style="flex:1;">Beeindig nu</div>
+            <div class="btn btn-outline sm" style="flex:1;">Volgende</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Eindscherm speler -->
+    <div class="mq-block">
+      <div class="mq-tag">Eindscherm - speler</div>
+      <div class="phone"><div class="notch"></div>
+        <div class="screen confetti-wrap">
+          <div class="confetti" style="left:10%;top:6%;background:var(--pink);transform:rotate(20deg)"></div>
+          <div class="confetti" style="left:80%;top:10%;background:var(--cyan);transform:rotate(-15deg)"></div>
+          <div class="confetti" style="left:50%;top:4%;background:var(--yellow);transform:rotate(8deg)"></div>
+          <div class="confetti" style="left:30%;top:16%;background:var(--violet);transform:rotate(-25deg)"></div>
+          <div class="confetti" style="left:65%;top:22%;background:var(--pink);transform:rotate(40deg)"></div>
+          <div style="text-align:center;padding:22px 16px 6px;">
+            <div class="disp" style="font-size:13px;color:var(--yellow);font-weight:700;">WINNAAR</div>
+            <div class="disp" style="font-size:22px;font-weight:800;">Sanne wint!</div>
+          </div>
+          <div class="podium">
+            <div class="pod-col"><div class="avatar av-c">T</div><div class="pod-bar">7</div></div>
+            <div class="pod-col"><div class="avatar av-y">S</div><div class="pod-bar">15</div></div>
+            <div class="pod-col"><div class="avatar av-p">M</div><div class="pod-bar">6</div></div>
+          </div>
+          <div style="padding:20px 16px;"><div class="btn btn-cyan" style="width:100%;">Nieuw spel starten</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Eindscherm spelleider (zelfde inhoud, groot scherm) -->
+    <div class="mq-block wide">
+      <div class="mq-tag">Eindscherm - spelleider (identiek, groot scherm)</div>
+      <div class="tv"><div class="screen confetti-wrap">
+        <div class="confetti" style="left:8%;top:5%;background:var(--pink);transform:rotate(20deg)"></div>
+        <div class="confetti" style="left:75%;top:8%;background:var(--cyan);transform:rotate(-15deg)"></div>
+        <div class="confetti" style="left:45%;top:4%;background:var(--yellow);transform:rotate(8deg)"></div>
+        <div class="confetti" style="left:25%;top:14%;background:var(--violet);transform:rotate(-25deg)"></div>
+        <div class="confetti" style="left:60%;top:18%;background:var(--pink);transform:rotate(40deg)"></div>
+        <div style="text-align:center;padding:24px 16px 6px;">
+          <div class="disp" style="font-size:14px;color:var(--yellow);font-weight:700;">WINNAAR</div>
+          <div class="disp" style="font-size:26px;font-weight:800;">Sanne wint met 15 punten!</div>
+        </div>
+        <div class="podium" style="max-width:360px;margin:0 auto;">
+          <div class="pod-col"><div class="avatar av-c">T</div><div class="pod-bar">7</div></div>
+          <div class="pod-col"><div class="avatar av-y">S</div><div class="pod-bar">15</div></div>
+          <div class="pod-col"><div class="avatar av-p">M</div><div class="pod-bar">6</div></div>
+        </div>
+        <div class="gm-controls" style="justify-content:center;"><div class="btn btn-cyan">Nieuw spel starten</div></div>
+      </div><div class="tv-stand"></div></div>
+    </div>
+
+    <div class="mq-section"><span class="n">GROEP 5</span><h2 class="disp">Beheerder</h2><p>Afspeellijsten beheren en nummers compleet maken.</p></div>
+
+    <!-- Beheerder overzicht -->
+    <div class="mq-block wide">
+      <div class="mq-tag">Beheerder - afspeellijst-overzicht</div>
+      <div class="tv"><div class="screen">
+        <div class="topbar"><span class="brand-mini disp">Afspeellijsten</span><span class="btn btn-pink" style="padding:6px 12px;font-size:12px;">+ Toevoegen</span></div>
+        <div class="list-row"><div class="cover" style="background:var(--pink)"></div><div class="meta"><div class="t">Jaren 80 Hits</div><div class="s">120 nummers - 118 compleet</div></div><span class="badge ok">Compleet</span><div class="row-actions"><div class="btn btn-ghost sm">Ververs</div><div class="btn btn-ghost sm">Bewerken</div><div class="btn btn-ghost sm">Instellingen</div></div></div>
+        <div class="list-row"><div class="cover" style="background:var(--cyan)"></div><div class="meta"><div class="t">Global Hits 2026</div><div class="s">80 nummers - 74 compleet</div></div><span class="badge warn">6 onvolledig</span><div class="row-actions"><div class="btn btn-ghost sm">Ververs</div><div class="btn btn-yellow sm">Bewerken</div><div class="btn btn-ghost sm">Instellingen</div></div></div>
+        <div class="list-row"><div class="cover" style="background:var(--yellow)"></div><div class="meta"><div class="t">Nederlandstalig</div><div class="s">64 nummers - 64 compleet</div></div><span class="badge ok">Compleet</span><div class="row-actions"><div class="btn btn-ghost sm">Ververs</div><div class="btn btn-ghost sm">Bewerken</div><div class="btn btn-ghost sm">Instellingen</div></div></div>
+        <div class="list-row" style="border-bottom:none;"><div class="cover" style="background:var(--violet)"></div><div class="meta"><div class="t">Feestje!</div><div class="s">95 nummers - 90 compleet</div></div><span class="badge warn">5 onvolledig</span><div class="row-actions"><div class="btn btn-ghost sm">Ververs</div><div class="btn btn-yellow sm">Bewerken</div><div class="btn btn-ghost sm">Instellingen</div></div></div>
+      </div><div class="tv-stand"></div></div>
+    </div>
+
+    <!-- Beheerder: Bewerken (artiesten gesorteerd) -->
+    <div class="mq-block wide">
+      <div class="mq-tag">Beheerder - Bewerken: nummers gesorteerd op artiest</div>
+      <div class="tv"><div class="screen">
+        <div class="topbar"><span class="brand-mini disp">Global Hits 2026 - bewerken</span><span class="pill warn">6 aandacht nodig</span></div>
+        <div class="pad" style="padding-top:10px;">
+          <div style="font-size:11px;color:var(--muted);font-weight:700;padding:2px 0 8px;">EERST: LAND ONTBREEKT OF ONZEKER</div>
+        </div>
+        <div class="artist-row"><div class="meta"><div class="t">Central Cee</div><div class="s">3 nummers</div></div><span class="land ph">Land niet gevonden</span><div class="btn btn-ghost sm">Invullen</div></div>
+        <div class="artist-row"><div class="meta"><div class="t">Feid</div><div class="s">2 nummers</div></div><span class="land"><span class="pct warn">82%</span> Colombia</span><div class="btn btn-ghost sm">Controleren</div></div>
+        <div class="artist-row"><div class="meta"><div class="t">Kensington</div><div class="s">4 nummers</div></div><span class="land ph">Land niet gevonden</span><div class="btn btn-ghost sm">Invullen</div></div>
+        <div class="artist-row"><div class="meta"><div class="t">Sabrina Carpenter</div><div class="s">5 nummers</div></div><span class="land"><span class="pct warn">88%</span> United States</span><div class="btn btn-ghost sm">Controleren</div></div>
+        <div class="pad" style="padding-top:10px;">
+          <div style="font-size:11px;color:var(--muted);font-weight:700;padding:2px 0 8px;border-top:1px solid var(--line);padding-top:14px;">OVERIGE ARTIESTEN (A-Z)</div>
+        </div>
+        <div class="artist-row"><div class="meta"><div class="t">Coldplay</div><div class="s">6 nummers</div></div><span class="land"><span class="pct ok">98%</span> United Kingdom</span><div class="btn btn-ghost sm">Wijzigen</div></div>
+        <div class="artist-row"><div class="meta"><div class="t">Kensington</div><div class="s">4 nummers</div></div><span class="land"><span class="pct ok">100%</span> Netherlands</span><div class="btn btn-ghost sm">Wijzigen</div></div>
+        <div class="artist-row" style="border-bottom:none;"><div class="meta"><div class="t">Taylor Swift</div><div class="s">5 nummers</div></div><span class="land"><span class="pct ok">100%</span> United States</span><div class="btn btn-ghost sm">Wijzigen</div></div>
+      </div><div class="tv-stand"></div></div>
+    </div>
+
+    <!-- Beheerder: Instellingen (standaard vraagtype-verdeling per playlist) -->
+    <div class="mq-block">
+      <div class="mq-tag">Beheerder - Instellingen: standaardverdeling</div>
+      <div class="phone"><div class="notch"></div>
+        <div class="screen">
+          <div class="topbar"><span class="brand-mini disp">Jaren 80 Hits</span><span class="pill">100%</span></div>
+          <div class="slider-row"><div class="top"><span>Jaartal</span><span class="p">10%</span></div><div class="strack"><div class="sfill" style="width:10%;background:var(--pink)"></div></div></div>
+          <div class="slider-row"><div class="top"><span>Jaar +/- 3</span><span class="p">20%</span></div><div class="strack"><div class="sfill" style="width:20%;background:var(--cyan)"></div></div></div>
+          <div class="slider-row"><div class="top"><span>Decennium</span><span class="p">30%</span></div><div class="strack"><div class="sfill" style="width:30%;background:var(--yellow)"></div></div></div>
+          <div class="slider-row"><div class="top"><span>Titel</span><span class="p">15%</span></div><div class="strack"><div class="sfill" style="width:15%;background:var(--violet)"></div></div></div>
+          <div class="slider-row"><div class="top"><span>Artiest</span><span class="p">15%</span></div><div class="strack"><div class="sfill" style="width:15%;background:var(--pink)"></div></div></div>
+          <div class="slider-row"><div class="top"><span>Land van herkomst</span><span class="p">10%</span></div><div class="strack"><div class="sfill" style="width:10%;background:var(--cyan)"></div></div></div>
+          <div style="font-size:11px;color:var(--muted);padding:4px 16px 10px;">Dit is de standaard voor deze afspeellijst - een spelleider kan dit per spel nog aanpassen.</div>
+          <div style="padding:0 16px 10px;"><div class="btn btn-cyan" style="width:100%;">Opslaan</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mq-section"><span class="n">GROEP 6</span><h2 class="disp">Berichten &amp; feedback</h2><p>Spelleider stuurt feedback, beheerder reageert of stuurt zelf een bericht.</p></div>
+
+    <!-- Spelleider: feedback sturen + inbox -->
+    <div class="mq-block">
+      <div class="mq-tag">Spelleider - berichten</div>
+      <div class="phone"><div class="notch"></div>
+        <div class="screen">
+          <div class="topbar"><span class="brand-mini disp">Berichten</span><span class="pill warn">2 nieuw</span></div>
+          <div class="msg-row"><div class="msg-from">Beheerder</div><div class="msg-body">Bedankt voor je feedback over de timer - we passen dit aan naar 45 sec als default.</div><div class="msg-time">Gisteren</div></div>
+          <div class="msg-row unread"><div class="msg-from">Beheerder <span class="dot"></span></div><div class="msg-body">Let op: nieuwe afspeellijst "Feestje 2!" toegevoegd, leuk voor het weekend.</div><div class="msg-time">2 uur geleden</div></div>
+          <div style="font-size:11px;color:var(--muted);font-weight:700;padding:10px 16px 6px;border-top:1px solid var(--line);">FEEDBACK STUREN</div>
+          <div class="field"><div class="box ph">Typ je feedback voor de beheerder...</div></div>
+          <div style="padding:0 16px 10px;"><div class="btn btn-pink" style="width:100%;">Versturen</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Beheerder: berichtenoverzicht + reageren/broadcasten -->
+    <div class="mq-block wide">
+      <div class="mq-tag">Beheerder - berichten van spelleiders</div>
+      <div class="tv"><div class="screen">
+        <div class="topbar"><span class="brand-mini disp">Berichten</span><span class="btn btn-yellow" style="padding:6px 12px;font-size:12px;">+ Nieuw bericht</span></div>
+        <div class="msg-row"><div class="msg-from">Anna <span style="color:var(--muted);font-weight:400;">(spelleider)</span></div><div class="msg-body">De timer voelt te kort aan bij moeilijke vragen, kunnen we dat aanpassen?</div><div class="msg-time">Gisteren</div><div class="btn btn-ghost sm">Reageren</div></div>
+        <div class="msg-row unread"><div class="msg-from">Bram <span style="color:var(--muted);font-weight:400;">(spelleider)</span> <span class="dot"></span></div><div class="msg-body">Kan de afspeellijst "Jaren 80 Hits" wat meer nummers krijgen?</div><div class="msg-time">1 uur geleden</div><div class="btn btn-ghost sm">Reageren</div></div>
+      </div><div class="tv-stand"></div></div>
+    </div>
+
+    <!-- Beheerder: nieuw bericht sturen (specifiek of broadcast) -->
+    <div class="mq-block">
+      <div class="mq-tag">Beheerder - bericht sturen</div>
+      <div class="phone"><div class="notch"></div>
+        <div class="screen">
+          <div class="topbar"><span class="brand-mini disp">Nieuw bericht</span></div>
+          <div style="font-size:11px;color:var(--muted);font-weight:700;padding:12px 16px 4px;">AAN</div>
+          <div class="pillswitch"><div class="opt sel">Eén spelleider</div><div class="opt">Alle spelleiders</div></div>
+          <div class="field"><label>Spelleider</label><div class="box">Anna</div></div>
+          <div class="field"><label>Bericht</label><div class="box ph">Typ hier je bericht...</div></div>
+          <div style="padding:0 16px 10px;"><div class="btn btn-yellow" style="width:100%;">Versturen</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mq-section"><span class="n">GROEP 7</span><h2 class="disp">Statistieken</h2><p>Voor speler, spelleider en beheerder (marketing/groei).</p></div>
+
+    <!-- Speler statistieken -->
+    <div class="mq-block">
+      <div class="mq-tag">Speler - mijn statistieken</div>
+      <div class="phone"><div class="notch"></div>
+        <div class="screen">
+          <div class="topbar"><span class="brand-mini disp">Mijn statistieken</span></div>
+          <div class="stat-grid">
+            <div class="stat-card"><div class="v">23</div><div class="l">Spellen gespeeld</div></div>
+            <div class="stat-card"><div class="v">61%</div><div class="l">Win-percentage</div></div>
+            <div class="stat-card"><div class="v">4.1s</div><div class="l">Gem. reactietijd</div></div>
+            <div class="stat-card"><div class="v">6</div><div class="l">Langste win-streak</div></div>
+          </div>
+          <div style="font-size:11px;color:var(--muted);font-weight:700;padding:8px 16px 6px;">GOED PER VRAAGTYPE</div>
+          <div class="slider-row"><div class="top"><span>Jaartal</span><span class="p">80%</span></div><div class="strack"><div class="sfill" style="width:80%;background:var(--cyan)"></div></div></div>
+          <div class="slider-row"><div class="top"><span>Artiest</span><span class="p">54%</span></div><div class="strack"><div class="sfill" style="width:54%;background:var(--pink)"></div></div></div>
+          <div class="compare"><span class="up">&#9650;</span> Je reactietijd is sneller dan gemiddeld</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Spelleider statistieken -->
+    <div class="mq-block">
+      <div class="mq-tag">Spelleider - mijn sessies</div>
+      <div class="phone"><div class="notch"></div>
+        <div class="screen">
+          <div class="topbar"><span class="brand-mini disp">Mijn sessies</span></div>
+          <div class="stat-grid">
+            <div class="stat-card"><div class="v">12</div><div class="l">Gehoste spellen</div></div>
+            <div class="stat-card"><div class="v">5.3</div><div class="l">Gem. spelers/sessie</div></div>
+          </div>
+          <div style="font-size:11px;color:var(--muted);font-weight:700;padding:8px 16px 6px;">POPULAIRSTE AFSPEELLIJST</div>
+          <div class="reveal-card" style="margin-top:0;"><div class="t">Feestje!</div><div class="s">Gespeeld in 7 van de 12 sessies</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Beheerder marketing dashboard -->
+    <div class="mq-block wide">
+      <div class="mq-tag">Beheerder - marketing- &amp; groeistatistieken</div>
+      <div class="tv"><div class="screen">
+        <div class="topbar"><span class="brand-mini disp">Groei-overzicht</span><span class="pill">Laatste 30 dagen</span></div>
+        <div class="pad" style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;">
+          <div class="stat-card"><div class="v">184</div><div class="l">Actieve accounts</div></div>
+          <div class="stat-card"><div class="v">+27</div><div class="l">Nieuw deze maand</div></div>
+          <div class="stat-card"><div class="v">58%</div><div class="l">Retentie (2e keer)</div></div>
+          <div class="stat-card"><div class="v">9</div><div class="l">Actieve spelleiders</div></div>
+        </div>
+        <div class="pad" style="padding-top:0;">
+          <div style="font-size:11px;color:var(--muted);font-weight:700;padding:6px 0;">POPULAIRSTE AFSPEELLIJSTEN</div>
+          <div class="slider-row" style="margin:0 0 8px;"><div class="top"><span>Feestje!</span><span class="p">41 sessies</span></div><div class="strack"><div class="sfill" style="width:80%;background:var(--pink)"></div></div></div>
+          <div class="slider-row" style="margin:0 0 8px;"><div class="top"><span>Global Hits 2026</span><span class="p">33 sessies</span></div><div class="strack"><div class="sfill" style="width:65%;background:var(--cyan)"></div></div></div>
+          <div class="slider-row" style="margin:0;"><div class="top"><span>Jaren 80 Hits</span><span class="p">18 sessies</span></div><div class="strack"><div class="sfill" style="width:35%;background:var(--yellow)"></div></div></div>
+        </div>
+      </div><div class="tv-stand"></div></div>
+    </div>
+
+    <div class="mq-section"><span class="n">GROEP 8</span><h2 class="disp">Beheerder - overige schermen</h2></div>
+    <div class="mq-block">
+      <div class="mq-tag">Beheerder - playlist toevoegen</div>
+      <div class="phone"><div class="notch"></div>
+        <div class="screen">
+          <div class="topbar"><span class="brand-mini disp">Nieuwe afspeellijst</span></div>
+          <div class="field"><label>Spotify playlist-URL</label><div class="box ph">https://open.spotify.com/playlist/...</div></div>
+          <div style="padding:6px 16px;"><div class="btn btn-cyan" style="width:100%;">Ophalen &amp; verrijken</div></div>
+          <div style="font-size:11px;color:var(--muted);text-align:center;padding:6px 16px;">Land van herkomst wordt automatisch opgezocht via MusicBrainz</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Nummer-detail -->
+    <div class="mq-block">
+      <div class="mq-tag">Beheerder - nummer compleet maken</div>
+      <div class="phone"><div class="notch"></div>
+        <div class="screen">
+          <div class="topbar"><span class="brand-mini disp">Nummer bewerken</span><span class="badge warn">Onvolledig</span></div>
+          <div class="field"><label>Titel</label><div class="box">Cruel Summer</div></div>
+          <div class="field"><label>Artiest</label><div class="box">Taylor Swift</div></div>
+          <div class="field"><label>Jaar</label><div class="box">2019</div></div>
+          <div class="field"><label>Land van herkomst (van artiest "Taylor Swift")</label><div class="box ph">Nog niet gevonden - wordt automatisch toegepast op alle nummers van deze artiest</div></div>
+          <div class="toggle-row"><span class="lbl">Uitsluiten van spel</span><div class="toggle"><div class="dot"></div></div></div>
+          <div style="padding:10px 16px;"><div class="btn btn-pink" style="width:100%;">Opslaan</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Landenkiezer -->
+    <div class="mq-block">
+      <div class="mq-tag">Beheerder - land kiezen (doorzoekbare lijst)</div>
+      <div class="phone"><div class="notch"></div>
+        <div class="screen">
+          <div class="topbar"><span class="brand-mini disp">Kies land</span><span class="pill off">Taylor Swift</span></div>
+          <div class="field"><div class="box ph">Typ om te zoeken... "land"</div></div>
+          <div class="country-row"><span>Fin<b>land</b></span></div>
+          <div class="country-row"><span>Ier<b>land</b> <span style="color:var(--muted);font-weight:400;">(Ireland)</span></span></div>
+          <div class="country-row"><span>Neder<b>land</b> <span style="color:var(--muted);font-weight:400;">(Netherlands)</span></span></div>
+          <div class="country-row"><span>Nieuw-Zee<b>land</b> <span style="color:var(--muted);font-weight:400;">(New Zealand)</span></span></div>
+          <div class="country-row"><span>Po<b>land</b></span></div>
+          <div class="country-row" style="border-bottom:none;"><span>Swazi<b>land</b> <span style="color:var(--muted);font-weight:400;">(Eswatini)</span></span></div>
+          <div style="font-size:11px;color:var(--muted);text-align:center;padding:8px 16px;">Filtert live op letters die ergens in de naam voorkomen - leeg zoekveld toont alfabetisch alle landen</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
