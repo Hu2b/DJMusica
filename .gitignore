@@ -1,0 +1,11 @@
+# Afhankelijkheden (worden via npm install opgehaald)
+node_modules/
+
+# Testresultaten / coverage (worden bij elke run opnieuw gegenereerd)
+coverage/
+
+# Logs en tijdelijke bestanden
+*.log
+.DS_Store
+.env
+.env.*
