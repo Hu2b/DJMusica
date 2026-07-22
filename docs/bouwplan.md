@@ -1,6 +1,6 @@
 # Bouwplan – DJMusica: automatisch bouwen & testen
 
-Dit is het concrete stappenplan om van de documenten (requirements, architectuur, testset, schermontwerpen, logo) naar een werkende app te gaan, met geautomatiseerd bouwen en testen vanaf dag 1.
+Dit is het concrete stappenplan om van de documenten (requirements, architectuur, testset, schermontwerpen, logo) naar een werkende app te gaan, met geautomatiseerd bouwen en testen vanaf dag 1. Bijgewerkt na de securityreview: de extra beveiligingseisen (FR-55 t/m FR-61, NFR-14/15) en de systeemintegratietest/testrapport-eisen zijn verwerkt in Fase 2 en Fase 4/4a hieronder.
 
 ## Fase 0 — Accounts & tools regelen (eenmalig, voordat er code geschreven wordt)
 
@@ -35,13 +35,14 @@ Je hoeft dit niet allemaal tegelijk te doen — begin met 1, 2 en 3, de rest (4 
 
 Resultaat van deze fase: elke keer dat je iets pusht naar GitHub, draait er automatisch een check, ook al doet die nog bijna niets.
 
-## Fase 2 — Automatisch testen inrichten (bouwt voort op testset.md §9)
+## Fase 2 — Automatisch testen inrichten (bouwt voort op testset.md §11)
 
 1. **Unit tests**: installeer Jest of Vitest in `/backend`. Schrijf de eerste unit test voor de Answer Matcher (fuzzy-matching, FR-17) — dit is de simpelste, meest geïsoleerde logica en een goede eerste test.
 2. **Integratietests**: zet een aparte test-database op (in CI: een tijdelijke Postgres-container naast je testrun). Test de Game Engine en Track Picker tegen deze database, met Spotify/MusicBrainz gemockt (geen echte API-calls in tests).
 3. **E2E/BDD-tests**: installeer Playwright + Cucumber. Neem 3-5 scenario's uit testset.md (bijvoorbeeld "Speler meldt zich aan" en "Ronde sluit zodra iedereen heeft geantwoord") en zet die om in werkende teststappen.
-4. **Testrapportage**: laat CI een testrapport en coverage-percentage genereren, en upload dat als CI-artefact (zie testset.md §9.4 voor de bewaarstrategie).
-5. Voeg deze teststappen toe aan `ci.yml`, ná de build-stap.
+4. **Systeemintegratietest van de gehele keten** (testset.md §11.1): een aparte, zwaardere testrun die het complete systeem doorloopt — registratie t/m eindscherm en statistieken, tegen echte Postgres/Redis-containers, externe API's gemockt, inclusief **twee volledige spellen gelijktijdig** als bewijs dat tegelijk spelen goed gaat (FR-38, NFR-3). Deze draait nachtelijk/bij release, niet bij elke kleine commit (te zwaar daarvoor).
+5. **Testrapportage**: laat CI een testrapport en coverage-percentage genereren, en upload dat als CI-artefact (zie testset.md §11.4 voor de bewaarstrategie). Elk rapport vermeldt per testcase: de gebruikte testdata, de testcase-omschrijving, de verwachte uitkomst en de werkelijke uitkomst — zowel machine-leesbaar (JUnit/Cucumber JSON) als een leesbaar HTML-overzicht.
+6. Voeg deze teststappen toe aan `ci.yml`, ná de build-stap.
 
 Resultaat: elke pull request laat nu zien of de tests slagen, met een concreet rapport erbij.
 
@@ -60,16 +61,18 @@ Resultaat: een commit op `main` leidt automatisch tot een bijgewerkte, geteste o
 
 Niet alles tegelijk bouwen. Logische volgorde, elke stap bovenop de vorige, telkens met bijbehorende tests uit testset.md:
 
-1. **Accounts & inloggen** (FR-33 t/m 35) — de basis waar alles op leunt.
-2. **Beheerder: playlist toevoegen + verrijking** (FR-5a, FR-28) — zonder mooie UI, gewoon werkend krijgen dat een Spotify-URL nummers + landen (per artiest) oplevert.
+1. **Accounts & inloggen** (FR-33 t/m 35, plus de securityreview-aanvullingen FR-55 t/m 57: e-mailverificatie, wachtwoordeisen, uitlog-/sessiegedrag) — de basis waar alles op leunt.
+2. **Beheerder: playlist toevoegen + verrijking** (FR-5a, FR-28, FR-30, FR-31) — zonder mooie UI, gewoon werkend krijgen dat een Spotify-URL nummers + landen (per artiest) oplevert, inclusief het combineren van gegevens uit meerdere bronnen tot één trackrecord (FR-30) en het "ververs"-mechanisme dat latere wijzigingen in de Spotify-playlist detecteert (FR-31).
 3. **Spelleider: Spotify-app koppelen** (FR-37) — nodig voordat er iets afgespeeld kan worden.
-4. **Kernspel-loop**: sessie aanmaken, lobby, ronde starten, antwoorden, scoren, eindscherm — inclusief de één-sessie-tegelijk-check (FR-1 t/m 24, FR-3a). Dit is het hart van de app — pas hierna is er een "speelbaar" MVP.
+4. **Kernspel-loop**: sessie aanmaken, lobby, ronde starten, antwoorden, scoren, eindscherm — inclusief de één-sessie-tegelijk-check (FR-1 t/m 24, FR-3a), het onthouden van spelleider-instellingen voor het volgende spel (FR-32), de veilige join-codes (FR-59), server-side spelvalidatie tegen valsspelen (FR-60) en WebSocket-autorisatie per bericht (FR-61). Dit is ook de stap waar de realtime-eisen (NFR-1: sync binnen ~1 seconde, NFR-5: verbinding herstellen zonder puntenverlies) waargemaakt moeten worden — dit is het hart van de app, pas hierna is er een "speelbaar" MVP.
 5. **Beheerder-UI verfijnen**: Bewerken-scherm (artiest-sortering, land-koppeling), Instellingen-scherm, landenkiezer (FR-5b t/m 5d, FR-28b t/m 28d).
 6. **Statistieken** (FR-39 t/m 43) — bouwt voort op data die al verzameld wordt door stap 4.
 7. **Account verwijderen** (FR-44 t/m 49) — bevestigingsmail, grace period, geanonimiseerde permanente verwijdering.
 8. **Berichten & feedback** (FR-50 t/m 53) — spelleider ↔ beheerder.
 9. **PWA-installeerbaarheid** (FR-54) — manifest.json, iconen, "Voeg toe aan beginscherm".
 10. **Polish**: responsive spelleiderscherm zonder layout-shift (NFR-2), geluid/animaties, foutafhandeling, edge cases.
+
+**Doorlopende eisen, geen eigen stap**: sommige NFR's zijn geen losse bouwstap maar gelden vanaf het begin door de hele stack heen — deze zijn al belegd in Fase 0/1/3 en gelden bij elke stap hierboven: NFR-4 (Spotify-tokens versleuteld), NFR-7 (persistente opslag, niet pas achteraf), NFR-8 (Nederlandstalige interface), NFR-9/10 (Spotify Premium- en Development Mode-beperkingen), NFR-11 (wachtwoord-hashing, onderdeel van stap 1).
 
 ## Fase 4a — Beveiliging inrichten (parallel aan Fase 3, NFR-13)
 
@@ -80,6 +83,9 @@ Dit hoort niet aan het eind, maar vanaf het begin van de infrastructuur-opzet:
 - Dependabot (of vergelijkbaar) inschakelen in GitHub voor automatische kwetsbaarheden-scans.
 - Versleutelde, van de live-server gescheiden back-ups instellen zodra er productiedata is.
 - Privacyverklaring opstellen zodra het account-/verwijderproces (stap 7) werkt.
+- **Beheerder-rol** (FR-58): vanaf het begin regelen dat deze rol alleen buiten de app om (rechtstreeks in de database, of een eenmalig setup-script) toegekend kan worden — nooit via een scherm of endpoint.
+- **Beveiligings-headers** (NFR-15): HSTS, Content-Security-Policy, anti-clickjacking en X-Content-Type-Options meteen bij de eerste versie van de backend instellen, niet pas achteraf toevoegen.
+- **Logging & alarmering** (NFR-14): vanaf de Auth Service (stap 1 in Fase 4) meteen mislukte inlogpogingen, lockouts, resets en verificaties loggen, zodat er van meet af aan een "rookmelder" is in plaats van dit later te moeten inbouwen.
 
 ## Fase 5 — Werkritme
 
