@@ -67,7 +67,7 @@ flowchart TB
 ```
 
 **Toelichting:**
-- Nieuwe **Auth Service**: regelt registratie, login (e-mail + wachtwoord), wachtwoord-resetlinks en de oplopende wachttijd na 5 mislukte pogingen (FR-33 t/m FR-35). Elk account kan meerdere rollen hebben (FR-36); rollen zijn dus een eigenschap van het account, geen apart inlogsysteem per rol.
+- Nieuwe **Auth Service**: regelt registratie mét e-mailverificatie (FR-55), login (e-mail + wachtwoord, met wachtwoordeisen FR-56), wachtwoord-resetlinks (FR-34) en de oplopende wachttijd na 5 mislukte pogingen per account+IP-combinatie (FR-35). Meldingen rond registratie/reset zijn altijd neutraal, zodat niet te achterhalen is welke e-mailadressen bestaan. De Auth Service beheert ook de sessieduur (FR-57): buiten een actief spel verloopt een login na 2 uur, met een 60-seconden-aftelwaarschuwing en een verleng-knop; tijdens een actief spel nooit. Elk account kan meerdere rollen hebben (FR-36), maar de beheerder-rol is uitsluitend buiten de app om toekenbaar (FR-58) — er bestaat geen endpoint voor.
 - Nieuwe rol **Beheerder** voegt publieke Spotify-afspeellijsten toe via een eigen (simpel) beheerscherm; deze worden in de **Persistente DB** opgeslagen, inclusief de nummers die erin zitten.
 - **Elke spelleider koppelt een eigen Spotify-app** (eigen Client ID/Secret, FR-37) via een geleide wizard. Hierdoor draaien meerdere spelleiders (GM1, GM2, ...) volledig onafhankelijk naast elkaar, elk tegen hun eigen Spotify Client ID — de 5-accounts-limiet van Spotify's Development Mode (NFR-10) geldt zo per spelleider, niet gedeeld over de hele applicatie (FR-38).
 - De **Track Picker** houdt per afspeellijst bij welke nummers al zijn afgespeeld (en hoe vaak); kiest random uit de "nog niet gespeelde" set, en reset de cyclus zodra alle nummers een keer geweest zijn (FR-25/26).
@@ -81,6 +81,9 @@ flowchart TB
 - **Stabiele layout, geen verspringing** (herzien NFR-2): correcte `viewport`-meta-tag en CSS `env(safe-area-inset-*)` voor notch/dynamic island; elementen die asynchroon vullen (avatars, live-antwoordenlijst, laadindicatoren) krijgen vooraf gereserveerde ruimte (vaste hoogtes/skeleton-states) zodat de rest van de pagina niet verspringt zodra data binnenkomt.
 - **Canonieke landenlijst** (FR-28c/28d): een statische referentiedataset (bv. ISO 3166-1 landnamen) wordt gebruikt op twee plekken: (1) het land-kiesscherm van de beheerder (alfabetisch bladerbaar of live doorzoekbaar op substring), en (2) het genereren van multiple-choice-opties bij het vraagtype "land van herkomst artiest". Zo blijven opgeslagen en getoonde landnamen altijd consistent, en is er geen los invoerveld met risico op tikfouten.
 - **Eindscherm-pariteit** (herzien FR-23): de Game Engine broadcast de "Einde"-state met winnaar en eindstand naar alle verbonden clients tegelijk (spelers én spelleider) via dezelfde WebSocket-boodschap, zodat iedereen exact hetzelfde eindscherm ziet, niet alleen het grote scherm van de spelleider.
+- **Server-side spelvalidatie** (FR-60, anti-valsspelen): de Game Engine is de enige bron van waarheid voor tijd en uitslag. Rondestart- en sluitmomenten leven op de server; antwoorden die na sluiting binnenkomen worden geweigerd; de reactietijd = servermoment van ontvangst minus servermoment van rondestart. Alles wat de client zelf over tijd of correctheid beweert, wordt genegeerd.
+- **WebSocket-autorisatie** (FR-61): de Realtime Game Server koppelt elke verbinding bij het opzetten aan het ingelogde account, en valideert bij élk bericht: (1) hoort dit account bij deze sessie, (2) staat de rol deze actie toe (alleen de spelleider van de sessie mag ronde-besturing sturen). Geweigerde pogingen worden gelogd (NFR-14).
+- **Join-codes** (FR-59): gegenereerd met ≥6 tekens uit een tekenset zonder verwarrende tekens, gekoppeld aan een vervaltijd (bij sessiestart of na 4 uur), met rate-limiting op het join-endpoint tegen geautomatiseerd raden.
 
 ## 2. Sessie state machine
 
@@ -144,7 +147,7 @@ erDiagram
     USER ||--o| SPELLEIDER_VOORKEUR : heeft
     USER ||--o{ SPELLEIDER_PLAYLIST_VERDELING : heeft_per_playlist
     USER ||--o{ SESSION : host_als_spelleider
-    USER ||--o{ VERWIJDER_TOKEN : heeft
+    USER ||--o{ ACCOUNT_TOKEN : heeft
     USER ||--o{ BERICHT : verstuurt_ontvangt
     PLAYLIST ||--o{ TRACK : bevat
     PLAYLIST ||--o{ SESSION : gebruikt_in
@@ -169,6 +172,7 @@ erDiagram
     USER {
         string id
         string email
+        datetime emailGeverifieerdOp
         string wachtwoordHash
         json rollen
         int mislukteInlogpogingen
@@ -177,8 +181,9 @@ erDiagram
         datetime gracePeriodEindigtOp
         datetime createdAt
     }
-    VERWIJDER_TOKEN {
+    ACCOUNT_TOKEN {
         string userId
+        string type
         string tokenHash
         datetime aangemaaktOp
         datetime verlooptOp
@@ -267,7 +272,7 @@ erDiagram
 
 **Toelichting datamodel:**
 - `USER` is nieuw en centraal (FR-33/FR-36): één account per persoon, met een e-mailadres, gehasht wachtwoord, en een lijst van rollen (`speler`, `spelleider`, `beheerder` — kunnen samen voorkomen). `mislukteInlogpogingen` en `lockedUntil` ondersteunen de oplopende wachttijd na 5 mislukte pogingen (FR-35, NFR-11).
-- `USER.verwijderStatus` en `gracePeriodEindigtOp` ondersteunen het verwijderproces (FR-44 t/m 49): waarden zijn bv. `actief`, `wachtOpMailbevestiging`, `inGracePeriod`, `permanentVerwijderd`. `VERWIJDER_TOKEN` bewaart de beveiligde, eenmalige bevestigingslink (gehasht opgeslagen, niet het token zelf) met een vervaltijd.
+- `USER.verwijderStatus` en `gracePeriodEindigtOp` ondersteunen het verwijderproces (FR-44 t/m 49): waarden zijn bv. `actief`, `wachtOpMailbevestiging`, `inGracePeriod`, `permanentVerwijderd`. `ACCOUNT_TOKEN` bewaart alle beveiligde eenmalige e-maillinks op één plek, met een `type`-veld: `verwijderen` (24u geldig, FR-49), `emailVerificatie` (24u, FR-55) en `wachtwoordReset` (1u, FR-34). Altijd gehasht opgeslagen (nooit het token zelf), eenmalig bruikbaar, met vervaltijd — zo gelden dezelfde strenge regels automatisch voor alle drie de linksoorten.
 - Bij permanente verwijdering (na de grace period) wordt de `USER`-rij **niet** hard verwijderd, maar worden `email`, `wachtwoordHash` en overige persoonsgegevens overschreven/gewist, met de rij zelf (en het `id`) behouden als anonieme placeholder ("Verwijderde speler"). Zo blijven foreign keys vanuit `PLAYER`/`ANSWER` naar deze rij geldig, en blijven scoreborden/statistieken van andere, nog actieve spelers intact (FR-48).
 - `SPOTIFY_APP_KOPPELING` bewaart, per `USER` die de spelleider-rol activeert, diens eigen Spotify Client ID/Secret en OAuth-tokens (FR-37) — dit vervangt één centrale Spotify-app-registratie voor de hele applicatie.
 - `PLAYER.userId` en `SESSION.spelleiderUserId` koppelen sessie-deelname terug aan een vast `USER`-account, in plaats van alleen een los ingevulde naam. Zo blijven statistieken (`ANSWER`, FR-27) van een speler intact, ongeacht bij welke spelleider hij/zij meespeelt (FR-36).
@@ -314,3 +319,7 @@ erDiagram
 | Back-ups | Automatisch, versleuteld, fysiek/logisch gescheiden van de live-server |
 | Account verwijderen | Zie FR-44 t/m FR-49: beveiligde eenmalige e-maillink (min. 128 bits, 24u geldig), verwijderverzoek vereist actieve sessie, rate-limited endpoint, 30 dagen grace period, daarna permanente verwijdering met anonimisering van gedeelde speldata |
 | AVG | Recht op inzage/verwijdering (FR-44 t/m 49), privacyverklaring, meldproces richting Autoriteit Persoonsgegevens binnen 72 uur bij een datalek met risico voor gebruikers |
+| Accounts | E-mailverificatie bij registratie (FR-55); wachtwoordeisen incl. gelekte-wachtwoorden-controle (FR-56); neutrale meldingen (geen e-mail-onthulling, FR-34/55); lockout per account+IP (FR-35); resetlink 1u/eenmalig + alle sessies uitloggen na reset (FR-34); sessieduur 2u met aftelwaarschuwing buiten actief spel (FR-57); beheerder-rol alleen buiten de app om (FR-58) |
+| Spel-integriteit | Server-side tijd- en uitslagbepaling, late antwoorden geweigerd, reactietijd server-side (FR-60); WebSocket-autorisatie per bericht op sessie én rol (FR-61); join-codes ≥6 tekens met vervaltijd en rate-limiting (FR-59) |
+| Logging & alarmering | Beveiligingsgebeurtenissen gelogd zonder gevoelige inhoud, beschermd tegen aanpassing, signalering bij afwijkende patronen (NFR-14) |
+| Browser & externe data | HSTS, Content-Security-Policy, anti-clickjacking, X-Content-Type-Options; Spotify/MusicBrainz-data behandeld als onvertrouwde invoer (NFR-15) |
