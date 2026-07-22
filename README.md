@@ -25,7 +25,7 @@ djmusica/
 ## Status
 
 - ✅ Answer Matcher (fuzzy tekstmatching + jaar-tolerantie) — werkend, 18 unit tests, 100% van de functies gedekt.
-- ✅ CI-pipeline (lint + test + coverage-artefact) opgezet.
+- ✅ CI-pipeline (lint + test + testrapport + coverage) opgezet, draait op elke push naar `main` én op elke pull request.
 - 🔨 Auth Service (Fase 4, stap 1) — in aanbouw, per deelstap een aparte pull request:
   - ✅ **Stap 1a: Registreren met e-mailverificatie** (FR-33, FR-55, FR-56) — wachtwoordeisen, gelekte-wachtwoorden-check, gehashte opslag, verificatielink, neutrale melding. Zie `backend/src/auth/`.
   - ⬜ Stap 1b: Inloggen + oplopende wachttijd na 5 mislukte pogingen (FR-35).
@@ -41,6 +41,15 @@ npm install
 npm test
 npm run lint
 ```
+
+### Testrapport bekijken
+
+`npm test` genereert (naast het overzicht in de terminal) twee rapporten in `backend/reports/`:
+
+- **`testrapport.html`** — een leesbaar overzicht van alle tests (geslaagd/mislukt per scenario). Open dit bestand in een browser.
+- **`testrapport-junit.xml`** — hetzelfde, maar machineleesbaar (voor CI/trends).
+
+In GitHub kun je deze rapporten bekijken zonder zelf iets te draaien: open een pull request → tabblad **Checks/Actions** → de CI-run → onderaan bij **Artifacts** staan `testrapport` en `coverage` klaar om te downloaden.
 
 ## Volgende stappen (zie docs/bouwplan.md, Fase 0 en 4)
 

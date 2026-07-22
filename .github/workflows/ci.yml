@@ -1,10 +1,13 @@
 name: CI
 
 on:
+  # Draai op elke push naar main...
   push:
     branches: [main]
+  # ...en op ELKE pull request, ongeacht naar welke branch hij samenvoegt.
+  # Zo krijgt ook een pull request die (tijdelijk) op een andere feature-branch
+  # is gericht meteen een eigen groen/rood vinkje met testrapport.
   pull_request:
-    branches: [main]
 
 jobs:
   test-backend:
@@ -27,13 +30,23 @@ jobs:
       - name: Lint
         run: npm run lint
 
-      - name: Unit- en integratietests + coverage
+      - name: Unit- en integratietests + coverage + testrapport
         run: npm test
 
-      - name: Testrapport bewaren (CI-artefact, zie testset.md §11.4)
+      - name: Testrapport bewaren (leesbaar HTML + machineleesbaar JUnit, zie testset.md §11.4)
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: backend-coverage
+          name: testrapport
+          path: |
+            backend/reports/testrapport.html
+            backend/reports/testrapport-junit.xml
+          retention-days: 90
+
+      - name: Coverage-rapport bewaren (CI-artefact)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
           path: backend/coverage
           retention-days: 90
