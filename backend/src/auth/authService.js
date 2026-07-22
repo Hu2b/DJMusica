@@ -5,7 +5,8 @@
  * wachtwoord-reset en sessieduur. Bevat inmiddels:
  *   - STAP 1: registreren met e-mailverificatie (FR-33, FR-55, FR-56)
  *   - STAP 2: inloggen met oplopende wachttijd na 5 mislukte pogingen (FR-35)
- * Wachtwoord-reset en sessieduur volgen in latere stappen/PR's.
+ *   - STAP 3: wachtwoord vergeten/reset, alle sessies uitloggen na reset (FR-34)
+ * De sessieduur (FR-57) volgt in een latere stap/PR.
  *
  * De service krijgt al zijn "hulpstukken" van buitenaf mee (opslag, mailer,
  * gelekt-wachtwoord-check, klok, beveiligingslog, login-afremming). Dat maakt
@@ -33,6 +34,12 @@ const DUMMY_HASH =
 const NEUTRALE_LOGIN_FOUT =
   'Inloggen is niet gelukt. Controleer je e-mailadres en wachtwoord en probeer het opnieuw.';
 
+// Eén vaste, neutrale melding bij "wachtwoord vergeten": identiek voor een bekend
+// én een onbekend e-mailadres, zodat niet te achterhalen is welke adressen
+// bestaan (FR-34).
+const NEUTRALE_RESET_MELDING =
+  'Als dit e-mailadres bij ons bekend is, ontvang je een e-mail met een link om je wachtwoord opnieuw in te stellen.';
+
 /**
  * Eén vaste, neutrale melding voor registratie. Of het e-mailadres nu nieuw is
  * of al bestaat: de gebruiker ziet EXACT dezelfde tekst (FR-55). Zo kan niemand
@@ -59,6 +66,7 @@ class AuthService {
     securityLog,
     pwnedChecker,
     loginThrottle,
+    sessionStore,
     now = Date.now,
   }) {
     this.userStore = userStore;
@@ -67,6 +75,7 @@ class AuthService {
     this.securityLog = securityLog;
     this.pwnedChecker = pwnedChecker;
     this.loginThrottle = loginThrottle;
+    this.sessionStore = sessionStore;
     this.now = now;
   }
 
@@ -235,9 +244,99 @@ class AuthService {
       };
     }
 
-    // Stap 5: succes.
+    // Stap 5: succes. Start een sessie (één ingelogd apparaat).
+    const sessie = this.sessionStore ? this.sessionStore.create(user.id) : null;
     this.securityLog.record(EVENT_TYPES.LOGIN_GESLAAGD, { email: genormaliseerd, userId: user.id, ip });
-    return { ok: true, userId: user.id };
+    return { ok: true, userId: user.id, sessionId: sessie ? sessie.id : null };
+  }
+
+  /**
+   * "Wachtwoord vergeten" — stuurt een resetlink (FR-34).
+   *
+   * De melding is ALTIJD hetzelfde, of het e-mailadres nu bekend is of niet,
+   * zodat niet te achterhalen is welke adressen bestaan. Alleen als het account
+   * echt bestaat, sturen we daadwerkelijk een mail met een link die 1 uur geldig
+   * en eenmalig bruikbaar is. Oudere, nog openstaande resetlinks worden ingetrokken.
+   *
+   * @param {object} input
+   * @param {string} input.email
+   * @param {string} [input.ip]
+   * @returns {Promise<{ ok: true, message: string }>}
+   */
+  async requestPasswordReset({ email, ip } = {}) {
+    const genormaliseerd = normalizeEmail(email);
+    const user = this.userStore.findByEmail(genormaliseerd);
+
+    if (user) {
+      // Eerdere openstaande resetlinks ongeldig maken (alleen de nieuwste telt).
+      this.tokenStore.invalidateAllForUser(user.id, TOKEN_TYPES.WACHTWOORD_RESET);
+      const { rawToken } = this.tokenStore.issue(user.id, TOKEN_TYPES.WACHTWOORD_RESET);
+      await this.mailer.sendPasswordResetEmail({ email: genormaliseerd, rawToken });
+      this.securityLog.record(EVENT_TYPES.WACHTWOORD_RESET_AANGEVRAAGD, {
+        email: genormaliseerd,
+        userId: user.id,
+        ip,
+      });
+    } else {
+      // Onbekend adres: niets versturen, wél dezelfde melding teruggeven.
+      this.securityLog.record(EVENT_TYPES.WACHTWOORD_RESET_AANGEVRAAGD, {
+        email: genormaliseerd,
+        ip,
+        onbekend: true,
+      });
+    }
+
+    return { ok: true, message: NEUTRALE_RESET_MELDING };
+  }
+
+  /**
+   * Stelt via de resetlink een nieuw wachtwoord in (FR-34).
+   *
+   * Bij succes:
+   *  - moet het nieuwe wachtwoord aan het beleid voldoen (FR-56);
+   *  - is de gebruikte link daarna verbruikt (eenmalig);
+   *  - worden ALLE lopende sessies van dit account uitgelogd, zodat opnieuw
+   *    inloggen met het nieuwe wachtwoord nodig is (ook voor een eventuele indringer).
+   *
+   * @param {object} input
+   * @param {string} input.rawToken - het token uit de resetlink
+   * @param {string} input.newPassword
+   * @param {string} [input.ip]
+   * @returns {Promise<{ ok: boolean, reden?: string, reasons?: string[], messages?: string[] }>}
+   */
+  async resetPassword({ rawToken, newPassword, ip } = {}) {
+    // Eerst het nieuwe wachtwoord toetsen (gaat over de getypte waarde, geen lek).
+    const beleid = await validatePassword(newPassword, { pwnedChecker: this.pwnedChecker });
+    if (!beleid.ok) {
+      return { ok: false, reden: 'WACHTWOORD_ZWAK', reasons: beleid.reasons, messages: beleid.messages };
+    }
+
+    // Link inwisselen (eenmalig, moet geldig en niet verlopen zijn).
+    const resultaat = this.tokenStore.consume(rawToken, TOKEN_TYPES.WACHTWOORD_RESET);
+    if (!resultaat.ok) {
+      this.securityLog.record(EVENT_TYPES.WACHTWOORD_RESET_MISLUKT, { reden: resultaat.reden, ip });
+      return { ok: false, reden: resultaat.reden };
+    }
+
+    // Nieuw wachtwoord opslaan (gehasht).
+    const wachtwoordHash = await hashPassword(newPassword);
+    this.userStore.update(resultaat.userId, { wachtwoordHash });
+
+    // Eventuele andere openstaande resetlinks ook intrekken.
+    this.tokenStore.invalidateAllForUser(resultaat.userId, TOKEN_TYPES.WACHTWOORD_RESET);
+
+    // Alle lopende sessies uitloggen (FR-34).
+    let uitgelogd = 0;
+    if (this.sessionStore) {
+      uitgelogd = this.sessionStore.destroyAllForUser(resultaat.userId);
+    }
+
+    this.securityLog.record(EVENT_TYPES.WACHTWOORD_RESET_VOLTOOID, {
+      userId: resultaat.userId,
+      uitgelogdeSessies: uitgelogd,
+      ip,
+    });
+    return { ok: true, uitgelogdeSessies: uitgelogd };
   }
 
   _wachttijdMelding(retryAfterMs) {
@@ -260,4 +359,5 @@ module.exports = {
   AuthService,
   NEUTRALE_REGISTRATIE_MELDING,
   NEUTRALE_LOGIN_FOUT,
+  NEUTRALE_RESET_MELDING,
 };

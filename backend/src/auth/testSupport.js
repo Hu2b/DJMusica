@@ -11,6 +11,7 @@
 const { InMemoryUserStore } = require('./userStore');
 const { InMemoryTokenStore } = require('./tokenStore');
 const { InMemoryLoginThrottle } = require('./loginThrottle');
+const { InMemorySessionStore } = require('./sessionStore');
 const { SecurityLog } = require('./securityLog');
 const { AuthService } = require('./authService');
 
@@ -81,6 +82,7 @@ function createAuthTestHarness({ pwned = [], now = createFakeClock() } = {}) {
   const userStore = new InMemoryUserStore({ now });
   const tokenStore = new InMemoryTokenStore({ now });
   const loginThrottle = new InMemoryLoginThrottle({ now });
+  const sessionStore = new InMemorySessionStore({ now });
   const securityLog = new SecurityLog({ now });
   const mailer = createFakeMailer();
   const pwnedChecker = createFakePwnedChecker(pwned);
@@ -92,6 +94,7 @@ function createAuthTestHarness({ pwned = [], now = createFakeClock() } = {}) {
     securityLog,
     pwnedChecker,
     loginThrottle,
+    sessionStore,
     now,
   });
 
@@ -111,6 +114,7 @@ function createAuthTestHarness({ pwned = [], now = createFakeClock() } = {}) {
     userStore,
     tokenStore,
     loginThrottle,
+    sessionStore,
     securityLog,
     mailer,
     pwnedChecker,
