@@ -68,11 +68,12 @@ flowchart TB
 
 **Toelichting:**
 - Nieuwe **Auth Service**: regelt registratie mét e-mailverificatie (FR-55), login (e-mail + wachtwoord, met wachtwoordeisen FR-56), wachtwoord-resetlinks (FR-34) en de oplopende wachttijd na 5 mislukte pogingen per account+IP-combinatie (FR-35). Meldingen rond registratie/reset zijn altijd neutraal, zodat niet te achterhalen is welke e-mailadressen bestaan. De Auth Service beheert ook de sessieduur (FR-57): buiten een actief spel verloopt een login na 2 uur, met een 60-seconden-aftelwaarschuwing en een verleng-knop; tijdens een actief spel nooit. Elk account kan meerdere rollen hebben (FR-36), maar de beheerder-rol is uitsluitend buiten de app om toekenbaar (FR-58) — er bestaat geen endpoint voor.
+- **Let op, naamsverwarring vermijden**: de "login-sessie" hierboven (hoe lang iemand ingelogd blijft, FR-57) is een ander begrip dan de `SESSION`-entiteit in het datamodel (sectie 4), die een **spelsessie** is (één spelletje met een spelleider en spelers). Beide heten toevallig "sessie" in de omgangstaal, maar zijn technisch losstaand: een login-sessie kan blijven bestaan over meerdere spelsessies heen, en hoeft niet in dezelfde tabel/opslag te zitten.
 - Nieuwe rol **Beheerder** voegt publieke Spotify-afspeellijsten toe via een eigen (simpel) beheerscherm; deze worden in de **Persistente DB** opgeslagen, inclusief de nummers die erin zitten.
 - **Elke spelleider koppelt een eigen Spotify-app** (eigen Client ID/Secret, FR-37) via een geleide wizard. Hierdoor draaien meerdere spelleiders (GM1, GM2, ...) volledig onafhankelijk naast elkaar, elk tegen hun eigen Spotify Client ID — de 5-accounts-limiet van Spotify's Development Mode (NFR-10) geldt zo per spelleider, niet gedeeld over de hele applicatie (FR-38).
 - De **Track Picker** houdt per afspeellijst bij welke nummers al zijn afgespeeld (en hoe vaak); kiest random uit de "nog niet gespeelde" set, en reset de cyclus zodra alle nummers een keer geweest zijn (FR-25/26).
 - De **Playlist Sync Service** combineert meerdere bronnen tot één trackrecord in de DB (FR-30/31): titel/artiest/jaar/URI via Spotify. Land van herkomst wordt nu op **artiest-niveau** bepaald en gecachet (FR-28): bij een nieuw nummer van een al bekende artiest wordt het land direct hergebruikt, zonder nieuwe MusicBrainz-aanroep.
-- Nieuwe **Statistics Service**: berekent spel-, speler- en spelleiderstatistieken grotendeels realtime uit `ANSWER`/`ROUND`/`SESSION` (FR-39 t/m FR-41), en marketingstatistieken (FR-42) via een nachtelijke aggregatiejob (te zwaar om steeds live te berekenen over de hele DB). Vergelijkende cijfers (FR-43) vergelijken een speler tegen het gemiddelde van alle spelers.
+- Nieuwe **Statistics Service**: berekent spel-, speler- en spelleiderstatistieken grotendeels realtime uit `ANSWER`/`ROUND`/`SESSION` (FR-39 t/m FR-41), en marketingstatistieken (FR-42) via een nachtelijke aggregatiejob (te zwaar om steeds live te berekenen over de hele DB). Vergelijkende cijfers (FR-43) vergelijken een speler tegen het gemiddelde van alle spelers. Daarnaast bewaakt de Statistics Service de serverbelasting (FR-42a t/m 42c): elke paar minuten wordt een `SERVER_METING`-rij toegevoegd, en wordt gecheckt of de door de beheerder ingestelde drempel is overschreden — zo ja, dan verstuurt de service (via dezelfde e-mailservice als FR-34/55) een waarschuwingsmail, met een hersteld-mail zodra het weer normaal is.
 - **Persistente DB** bevat nu ook de `USER`-tabel (accounts, rollen, wachtwoord-hash) naast playlists, afspeelhistorie en statistieken — dit maakt het mogelijk dat een speler zijn statistieken behoudt, ongeacht bij welke spelleider hij/zij meespeelt (FR-27, FR-36).
 - **Session Store** blijft apart voor de *lopende* sessie-state — dit hoeft niet persistent te zijn.
 - **Answer Matcher** blijft losgekoppeld zodat fuzzy-matchlogica (Levenshtein ≤ 3) apart getest kan worden.
@@ -268,6 +269,13 @@ erDiagram
         bool gelezen
         datetime aangemaaktOp
     }
+    SERVER_METING {
+        datetime gemetenOp
+        int actieveSessies
+        int actieveSpelers
+        float cpuGebruikPercentage
+        float geheugenGebruikPercentage
+    }
 ```
 
 **Toelichting datamodel:**
@@ -278,6 +286,7 @@ erDiagram
 - `PLAYER.userId` en `SESSION.spelleiderUserId` koppelen sessie-deelname terug aan een vast `USER`-account, in plaats van alleen een los ingevulde naam. Zo blijven statistieken (`ANSWER`, FR-27) van een speler intact, ongeacht bij welke spelleider hij/zij meespeelt (FR-36).
 - **Eén actieve sessie per account** (FR-3a): bij het joinen of starten van een sessie controleert de Game Engine of dit account al een `PLAYER`-record heeft in een sessie met status ≠ afgerond, of zelf `spelleiderUserId` is van zo'n lopende sessie. Zo niet, dan wordt de nieuwe deelname geweigerd. Dit is een check per account, niet een limiet op het totaal aantal gelijktijdige sessies in de applicatie (FR-38 blijft onbeperkt aantal spelleiders/sessies toestaan).
 - `BERICHT` ondersteunt de communicatie tussen spelleider en beheerder (FR-50 t/m 53): `vanUserId`/`naarUserId` bepalen afzender/ontvanger; `isBroadcast = true` betekent dat `naarUserId` leeg blijft en het bericht voor alle spelleiders zichtbaar is; `threadId` verwijst naar het oorspronkelijke bericht bij een reactie (leeg als het zelf het eerste bericht in een thread is).
+- `SERVER_METING` (FR-42a t/m 42c) is een losse, periodiek gevulde tabel (geen koppeling aan een specifiek account nodig) die elke meetronde (bv. elke 5 minuten) een rij toevoegt met het aantal actieve sessies/spelers en het CPU-/geheugengebruik op dat moment. Dit voedt zowel het live overzicht (laatste rij) als de historische grafiek (alle rijen over tijd) voor de beheerder. Een aparte, lichte achtergrondtaak vergelijkt bij elke meting de laatste CPU-/geheugenwaarde met de door de beheerder ingestelde drempel, en triggert de e-mailwaarschuwing (met de "hooguit 1x per uur"-regel) via de Statistics Service.
 - `ARTIEST` is nieuw (FR-28): land van herkomst wordt hier één keer per artiest vastgelegd, niet per nummer. `landHandmatigIngevuld = true` betekent 100% zekerheid en blokkeert overschrijven bij een volgende sync (FR-28b) — alleen het verwijderen van `land` (en resetten van deze vlag) maakt een nieuwe MusicBrainz-opzoeking mogelijk.
 - `TRACK.artiestId` verwijst naar `ARTIEST`; alle nummers van dezelfde artiest delen zo automatisch hetzelfde land, ook nummers die later worden toegevoegd (FR-31).
 - `TRACK.compleet` is een afgeleid veld: titel, jaar én het land van de gekoppelde `ARTIEST` zijn allemaal ingevuld; de Track Picker selecteert alleen tracks met `compleet = true` en `uitgeslotenDoorBeheerder = false` (FR-12a/12b).
@@ -295,7 +304,7 @@ erDiagram
 | Realtime | Socket.io of native WebSocket | Lage latency sync (NFR-1) |
 | Backend | Node.js | Zelfde taal als frontend, goede Spotify SDK-ondersteuning |
 | Session store | Redis (in Docker, zelf gehost — zie NFR-12) | Voorbereid op meerdere gelijktijdige sessies (NFR-3), geen betaald abonnement nodig |
-| Auth | Eigen Auth Service: bcrypt/argon2 voor wachtwoord-hashing, JWT of sessie-cookies voor ingelogde status, e-mailservice voor resetlinks | Accounts met e-mail/wachtwoord, oplopende wachttijd na 5 mislukte pogingen (FR-33 t/m FR-35, NFR-11) |
+| Auth | Eigen Auth Service: **scrypt** voor wachtwoord-hashing (gelijkwaardig aan bcrypt/argon2, maar standaard in Node.js beschikbaar — geen extra library), JWT of sessie-cookies voor ingelogde status, e-mailservice voor resetlinks. Opslag (accounts, tokens, login-sessies) zit achter een repository-interface: eerst in-memory voor snelle/geïsoleerde tests, later PostgreSQL/Redis zonder de Auth Service-logica zelf te hoeven aanpassen | Accounts met e-mail/wachtwoord, oplopende wachttijd na 5 mislukte pogingen (FR-33 t/m FR-35, NFR-11) |
 | Persistente DB | PostgreSQL (in Docker, zelf gehost — zie NFR-12) | Users, playlists, tracks, play-count en statistieken moeten vanaf MVP bewaard blijven (NFR-7), zonder terugkerende hostingkosten |
 | Spotify | Web API (playlist- en trackmetadata) + Connect API (afspeelbediening op device spelleider), **per spelleider een eigen Client ID/Secret** | Nodig voor FR-5, FR-5a, FR-14, FR-37/38 — volledig gratis |
 | Verrijkingsproces (land) | Playlist Sync Service: Spotify Web API (metadata) + MusicBrainz API (land per artiest, gecachet in `ARTIEST`), resultaat opgeslagen in DB | Combineert meerdere bronnen tot één record per artiest, geen live calls tijdens het spelen, geen herhaalde MusicBrainz-calls voor bekende artiesten (FR-28/30/31) — beide API's gratis |
@@ -311,7 +320,7 @@ erDiagram
 | Laag | Maatregel |
 |---|---|
 | Onderweg | HTTPS/TLS verplicht overal, gratis certificaat via Let's Encrypt |
-| Opgeslagen data | Wachtwoorden alleen gehasht (bcrypt/argon2); Spotify Client Secret + OAuth-tokens versleuteld, encryptiesleutel gescheiden van de database bewaard; schijfversleuteling op de VM |
+| Opgeslagen data | Wachtwoorden alleen gehasht (scrypt); Spotify Client Secret + OAuth-tokens versleuteld, encryptiesleutel gescheiden van de database bewaard; schijfversleuteling op de VM |
 | Infrastructuur | Firewall: alleen poort 443 open naar buiten; SSH uitsluitend met sleutel; Postgres/Redis alleen bereikbaar binnen het interne Docker-netwerk, nooit direct vanaf internet; database-gebruiker van de app heeft minimale rechten (least privilege) |
 | Applicatie | ORM/prepared statements tegen SQL-injectie; output-escaping tegen XSS; CSRF-bescherming op formulieren; rate-limiting op login (FR-35) én algemeen op de API |
 | Dependencies | Automatische kwetsbaarheden-scan in CI (bv. Dependabot) bij elke build |

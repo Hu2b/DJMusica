@@ -193,6 +193,21 @@ Feature: Eigen Spotify-app koppelen als spelleider (FR-37, FR-38)
     And heeft een probleem met spelleider A's Spotify-koppeling geen effect op sessie 2
 ```
 
+### 0.1 Implementatiestatus Auth Service (Fase 4, stap 1)
+
+De bovenstaande scenario's van sectie 0 zijn geïmplementeerd als geautomatiseerde unit- en integratietests in `backend/src/auth/` (94 tests, groen in CI). Overzicht per requirement:
+
+| Requirement | Getest gedrag | Testbestand |
+|---|---|---|
+| FR-33, FR-55, FR-56 | Registreren; account pas bruikbaar na e-mailverificatie; neutrale melding bij bestaand adres; te kort/gelekt wachtwoord geweigerd; verificatielink eenmalig en 24u geldig | `authService.registratie.test.js`, `passwordPolicy.test.js`, `passwordHasher.test.js`, `tokenStore.test.js` |
+| FR-35 | Inloggen; oplopende wachttijd (5e→1min, 6e→2min, 7e→4min); blokkade per account+IP niet misbruikbaar; neutrale foutmelding | `authService.inloggen.test.js`, `loginThrottle.test.js` |
+| FR-34 | Resetlink 1u geldig en eenmalig; neutrale melding voor bekend én onbekend adres; alle sessies uitgelogd na reset; nieuw wachtwoord moet aan beleid voldoen | `authService.reset.test.js`, `sessionStore.test.js` |
+| FR-57 | Aftelwaarschuwing 2u na inloggen; "blijf ingelogd" verlengt met 2u; geen reactie binnen 60s = uitgelogd; nooit uitloggen tijdens een actief spel; altijd een uitlog-knop | `authService.sessie.test.js`, `sessionLifetime.test.js` |
+| NFR-11 | Wachtwoorden gehasht opgeslagen (scrypt), nooit leesbaar | `passwordHasher.test.js` |
+| NFR-14 | Registratie, verificatie, mislukte/geblokkeerde/geslaagde inlog, reset en sessiegebeurtenissen gelogd — nooit met wachtwoorden of tokens | alle `authService.*.test.js` + `securityLog.test.js` |
+
+- **Status**: dit is ingericht in de CI (`.github/workflows/ci.yml`). Elke push naar `main` én elke pull request genereert een leesbaar HTML-testrapport (`backend/reports/testrapport.html`) én een machineleesbaar JUnit-rapport (`backend/reports/testrapport-junit.xml`), plus een coverage-rapport. Alle drie worden als CI-artefact bewaard (90 dagen) — dit is de eerste concrete invulling van de testrapport-eis uit §11.4.
+
 ## 1. Sessie & aanmelden
 
 ```gherkin
@@ -804,6 +819,48 @@ Feature: Marketing-/groeistatistieken (FR-42)
     And speelt deze week mee bij een geheel andere spelleider B
     When de retentiestatistiek wordt berekend
     Then telt dit mee als een terugkerende speler, ongeacht dat het een andere spelleider betreft
+```
+
+```gherkin
+Feature: Live belastingsoverzicht en drempelwaarschuwing (FR-42a t/m FR-42c)
+
+  Scenario: Live overzicht alleen voor de beheerder
+    Given een spelleider probeert het live belastingsoverzicht te bekijken
+    Then krijgt de spelleider geen toegang
+    When de beheerder dit overzicht opvraagt
+    Then ziet de beheerder het huidige aantal actieve sessies, het aantal actieve spelers, en het CPU-/geheugengebruik als percentage
+
+  Scenario: Metingen worden periodiek opgeslagen
+    Given het systeem draait en er zijn actieve sessies
+    When er 5 minuten verstrijken
+    Then is er een nieuwe meting (sessies, spelers, CPU%, geheugen%) opgeslagen
+    And blijven eerdere metingen ook bewaard, zodat de beheerder een verloop over tijd kan bekijken
+
+  Scenario: Standaard waarschuwingsdrempel is 80%
+    Given de beheerder heeft nog geen eigen drempel ingesteld
+    Then staat de waarschuwingsdrempel standaard op 80%
+
+  Scenario: Waarschuwingsmail bij overschrijding van de drempel
+    Given de beheerder heeft de drempel op 80% laten staan
+    When het CPU-gebruik van de server 85% bereikt
+    Then ontvangt de beheerder een waarschuwingsmail
+
+  Scenario: Geen mailspam zolang de drempel aanhoudt
+    Given de beheerder heeft zojuist een waarschuwingsmail ontvangen omdat het CPU-gebruik boven de drempel zit
+    When het CPU-gebruik 20 minuten later nog steeds boven de drempel zit
+    Then wordt er geen nieuwe waarschuwingsmail gestuurd (nog geen uur verstreken sinds de vorige)
+
+  Scenario: Hersteld-melding zodra het weer normaal is
+    Given de beheerder heeft een waarschuwingsmail ontvangen omdat het geheugengebruik boven de drempel zat
+    When het geheugengebruik weer onder de drempel zakt
+    Then ontvangt de beheerder een aparte mail dat de belasting weer normaal is
+
+  Scenario: Beheerder past de drempel zelf aan
+    Given de beheerder stelt de waarschuwingsdrempel in op 90% in plaats van de standaard 80%
+    When het CPU-gebruik 85% bereikt
+    Then wordt er geen waarschuwingsmail gestuurd (onder de nu ingestelde 90%)
+    When het CPU-gebruik daarna 92% bereikt
+    Then wordt er wel een waarschuwingsmail gestuurd
 ```
 
 ## 9. Non-functionele tests
