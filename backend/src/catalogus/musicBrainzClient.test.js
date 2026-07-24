@@ -14,12 +14,12 @@ function clientMetAntwoord(json) {
 }
 
 describe('MusicBrainzClient', () => {
-  test('vertaalt de landcode uit "country" naar een canonieke naam + zekerheid', async () => {
+  test('vertaalt de landcode uit "country" naar de Nederlandse naam + zekerheid', async () => {
     const { client } = clientMetAntwoord({
       artists: [{ score: 98, country: 'GB' }],
     });
     const r = await client.lookupArtistCountry({ naam: 'Coldplay' });
-    expect(r).toEqual({ land: 'United Kingdom', zekerheid: 98 });
+    expect(r).toEqual({ land: 'Verenigd Koninkrijk', zekerheid: 98 });
   });
 
   test('gebruikt het "area"-veld als "country" ontbreekt', async () => {
@@ -27,7 +27,7 @@ describe('MusicBrainzClient', () => {
       artists: [{ score: 96, area: { 'iso-3166-1-codes': ['NL'] } }],
     });
     const r = await client.lookupArtistCountry({ naam: 'Kensington' });
-    expect(r).toEqual({ land: 'Netherlands', zekerheid: 96 });
+    expect(r).toEqual({ land: 'Nederland', zekerheid: 96 });
   });
 
   test('geeft land null als er geen land in het resultaat zit', async () => {

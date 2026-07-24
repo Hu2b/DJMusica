@@ -19,10 +19,11 @@ const spotifyData = {
 };
 
 // Coldplay: hoge zekerheid; a-ha: hoge zekerheid; Vage Band: te lage zekerheid.
+// Namen in het Nederlands, zoals de echte MusicBrainz-client ze ook zou opleveren.
 const musicBrainzData = {
-  Coldplay: { land: 'United Kingdom', zekerheid: 98 },
-  'a-ha': { land: 'Norway', zekerheid: 96 },
-  'Vage Band': { land: 'France', zekerheid: 80 },
+  Coldplay: { land: 'Verenigd Koninkrijk', zekerheid: 98 },
+  'a-ha': { land: 'Noorwegen', zekerheid: 96 },
+  'Vage Band': { land: 'Frankrijk', zekerheid: 80 },
 };
 
 async function harnessMetImport() {
@@ -38,7 +39,7 @@ describe('VerrijkingService (FR-28, 28a, 28b)', () => {
     await h.verrijking.verrijkAlleOnbekende();
 
     const coldplay = h.artiestStore.findByNaam('Coldplay');
-    expect(coldplay.land).toBe('United Kingdom');
+    expect(coldplay.land).toBe('Verenigd Koninkrijk');
     expect(coldplay.landMatchZekerheid).toBe(98);
     expect(coldplay.landHandmatigIngevuld).toBe(false);
 
@@ -73,16 +74,16 @@ describe('VerrijkingService (FR-28, 28a, 28b)', () => {
     const { h } = await harnessMetImport();
     const vage = h.artiestStore.findByNaam('Vage Band');
 
-    h.verrijking.zetLandHandmatig(vage.id, 'Netherlands');
+    h.verrijking.zetLandHandmatig(vage.id, 'Nederland');
     let na = h.artiestStore.findById(vage.id);
-    expect(na.land).toBe('Netherlands');
+    expect(na.land).toBe('Nederland');
     expect(na.landMatchZekerheid).toBe(100);
     expect(na.landHandmatigIngevuld).toBe(true);
 
     // Nog een verrijkingsronde mag dit handmatige land niet aanraken.
     await h.verrijking.verrijkAlleOnbekende();
     na = h.artiestStore.findById(vage.id);
-    expect(na.land).toBe('Netherlands');
+    expect(na.land).toBe('Nederland');
     expect(na.landHandmatigIngevuld).toBe(true);
   });
 
@@ -97,7 +98,7 @@ describe('VerrijkingService (FR-28, 28a, 28b)', () => {
     await h.verrijking.verrijkAlleOnbekende();
 
     const coldplay = h.artiestStore.findByNaam('Coldplay');
-    expect(h.artiestStore.findById(coldplay.id).land).toBe('United Kingdom');
+    expect(h.artiestStore.findById(coldplay.id).land).toBe('Verenigd Koninkrijk');
 
     // Beheerder verwijdert het land...
     h.verrijking.verwijderLand(coldplay.id);
@@ -106,6 +107,6 @@ describe('VerrijkingService (FR-28, 28a, 28b)', () => {
     // ...en een volgende verrijking zoekt het opnieuw op via MusicBrainz.
     const resultaat = await h.verrijking.verrijkArtiest(coldplay.id);
     expect(resultaat.status).toBe('AUTO_INGEVULD');
-    expect(h.artiestStore.findById(coldplay.id).land).toBe('United Kingdom');
+    expect(h.artiestStore.findById(coldplay.id).land).toBe('Verenigd Koninkrijk');
   });
 });
