@@ -16,7 +16,8 @@ straks nummers kiest.
 | `landen.js` | De vaste, canonieke lijst met landen ter wereld, met **Nederlandse** namen (bladeren/zoeken, en ISO-code → Nederlandse naam). (FR-28c/28d, NFR-8) |
 | `musicBrainzClient.js` | Zoekt het land van een artiest op via de gratis MusicBrainz-dienst (geen account/sleutel nodig). (FR-28) |
 | `verrijkingService.js` | Vult het land per artiest in: automatisch bij ≥95% zekerheid, anders handmatig (100%, nooit overschreven); land verwijderen kan opnieuw opzoeken. (FR-28a/28b) |
-| `playlistImportService.js` | De dirigent: haalt via Spotify de nummers op en slaat ze op; kan een afspeellijst verwijderen en nummers handmatig uitsluiten. |
+| `playlistImportService.js` | De dirigent voor inladen: haalt via Spotify de nummers op en slaat ze op; kan een afspeellijst verwijderen en nummers handmatig uitsluiten. |
+| `playlistSyncService.js` | Het "verversen": haalt de afspeellijst opnieuw op, voegt nieuwe nummers toe, zet verdwenen nummers op inactief, en zoekt alleen voor nieuwe/onbekende artiesten het land op. (FR-31) |
 | `testSupport.js` | Een nep-Spotify én nep-MusicBrainz zodat tests draaien zonder echte externe aanroepen. |
 | `*.test.js` | De automatische tests, gebaseerd op `docs/testset.md` §4. |
 

@@ -9,6 +9,7 @@ const { InMemoryTrackStore } = require('./trackStore');
 const { InMemoryArtiestStore } = require('./artiestStore');
 const { PlaylistImportService } = require('./playlistImportService');
 const { VerrijkingService } = require('./verrijkingService');
+const { PlaylistSyncService } = require('./playlistSyncService');
 
 /** Nep-MusicBrainz: een map van artiestnaam -> { land, zekerheid }. */
 function createFakeMusicBrainzClient(byNaam = {}) {
@@ -63,9 +64,18 @@ function createCatalogusHarness({ spotifyData = {}, musicBrainzData = {} } = {})
 
   const verrijking = new VerrijkingService({ musicBrainzClient, artiestStore });
 
+  const sync = new PlaylistSyncService({
+    spotifyClient,
+    playlistStore,
+    trackStore,
+    artiestStore,
+    verrijking,
+  });
+
   return {
     service,
     verrijking,
+    sync,
     playlistStore,
     trackStore,
     artiestStore,
