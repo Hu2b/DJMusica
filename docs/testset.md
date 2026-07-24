@@ -379,7 +379,7 @@ Feature: Land van herkomst per artiest (FR-28 t/m FR-28b, FR-31)
     Given een nieuwe artiest "Coldplay" komt voor het eerst voor in een afspeellijst
     And de MusicBrainz-match voor deze artiest heeft een zekerheid van 98%
     When de verrijking draait
-    Then wordt bij artiest "Coldplay" het land "United Kingdom" automatisch opgeslagen
+    Then wordt bij artiest "Coldplay" het land "Verenigd Koninkrijk" automatisch opgeslagen
     And geldt dit land voor alle nummers van Coldplay in alle afspeellijsten
 
   Scenario: Onzekere MusicBrainz-match wordt niet automatisch overgenomen
@@ -394,13 +394,13 @@ Feature: Land van herkomst per artiest (FR-28 t/m FR-28b, FR-31)
     Then krijgt dat nummer automatisch hetzelfde land, zonder nieuwe MusicBrainz-aanroep
 
   Scenario: Handmatige invoer krijgt 100% zekerheid en wordt nooit overschreven
-    Given de beheerder vult het land van artiest "Kensington" handmatig in als "Netherlands"
+    Given de beheerder vult het land van artiest "Kensington" handmatig in als "Nederland"
     Then staat de zekerheid voor Kensington op 100%
     When de beheerder later de afspeellijst ververst
-    Then blijft het land van Kensington "Netherlands", ook al zou MusicBrainz iets anders opleveren
+    Then blijft het land van Kensington "Nederland", ook al zou MusicBrainz iets anders opleveren
 
   Scenario: Land verwijderen triggert nieuwe opzoeking bij volgende verversing
-    Given artiest "Kensington" heeft een handmatig ingevuld land "Netherlands" (100%)
+    Given artiest "Kensington" heeft een handmatig ingevuld land "Nederland" (100%)
     When de beheerder dit land verwijdert
     And daarna de afspeellijst ververst
     Then wordt het land van Kensington opnieuw opgezocht via MusicBrainz
@@ -419,11 +419,11 @@ Feature: Land van herkomst per artiest (FR-28 t/m FR-28b, FR-31)
     Then bevat de gefilterde lijst "<verwacht_land>"
 
     Examples:
-      | zoekterm | verwacht_land   |
-      | land     | Netherlands     |
-      | land     | Finland          |
-      | land     | Ireland          |
-      | ing      | United Kingdom  |
+      | zoekterm | verwacht_land        |
+      | land     | Nederland            |
+      | land     | Finland              |
+      | land     | Ierland              |
+      | rijk     | Verenigd Koninkrijk  |
 
   Scenario: Zoeken update bij elk ingetikt teken
     Given de beheerder heeft "ni" getypt in het zoekveld

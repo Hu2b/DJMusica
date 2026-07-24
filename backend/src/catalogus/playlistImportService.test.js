@@ -75,7 +75,7 @@ describe('PlaylistImportService - compleetheid & selecteerbaarheid (FR-12a/12b)'
 
     // Vul het land van Toto in (dit gebeurt straks netjes via stap 2b).
     const toto = h.artiestStore.findByNaam('Toto');
-    h.artiestStore.update(toto.id, { land: 'United States' });
+    h.artiestStore.update(toto.id, { land: 'Verenigde Staten' });
 
     const selecteerbaar = h.service.selecteerbareTracks(playlistId);
     // Africa en Rosanna (beide van Toto, met jaar) zijn nu selecteerbaar.
@@ -88,7 +88,7 @@ describe('PlaylistImportService - compleetheid & selecteerbaarheid (FR-12a/12b)'
     const { playlistId } = await h.service.importPlaylist({ url: URL, beheerderUserId: BEHEERDER });
 
     const mystery = h.artiestStore.findByNaam('Mystery');
-    h.artiestStore.update(mystery.id, { land: 'United Kingdom' });
+    h.artiestStore.update(mystery.id, { land: 'Verenigd Koninkrijk' });
 
     const mysteryTrack = h.service
       .tracksMetStatus(playlistId)
@@ -100,7 +100,7 @@ describe('PlaylistImportService - compleetheid & selecteerbaarheid (FR-12a/12b)'
   test('beheerder sluit een nummer handmatig uit en maakt dat weer ongedaan (FR-12b)', async () => {
     const h = createCatalogusHarness({ spotifyData });
     const { playlistId } = await h.service.importPlaylist({ url: URL, beheerderUserId: BEHEERDER });
-    h.artiestStore.update(h.artiestStore.findByNaam('a-ha').id, { land: 'Norway' });
+    h.artiestStore.update(h.artiestStore.findByNaam('a-ha').id, { land: 'Noorwegen' });
 
     const takeOnMe = h.service.tracksMetStatus(playlistId).find((t) => t.titel === 'Take On Me');
     expect(takeOnMe.selecteerbaar).toBe(true);
