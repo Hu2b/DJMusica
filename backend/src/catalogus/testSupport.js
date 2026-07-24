@@ -8,6 +8,22 @@ const { InMemoryPlaylistStore } = require('./playlistStore');
 const { InMemoryTrackStore } = require('./trackStore');
 const { InMemoryArtiestStore } = require('./artiestStore');
 const { PlaylistImportService } = require('./playlistImportService');
+const { VerrijkingService } = require('./verrijkingService');
+
+/** Nep-MusicBrainz: een map van artiestnaam -> { land, zekerheid }. */
+function createFakeMusicBrainzClient(byNaam = {}) {
+  // Normaliseer de sleutels naar kleine letters voor makkelijk opzoeken.
+  const genormaliseerd = {};
+  for (const [naam, waarde] of Object.entries(byNaam)) {
+    genormaliseerd[naam.trim().toLowerCase()] = waarde;
+  }
+  return {
+    byNaam: genormaliseerd,
+    async lookupArtistCountry({ naam }) {
+      return genormaliseerd[String(naam).trim().toLowerCase()] || { land: null, zekerheid: 0 };
+    },
+  };
+}
 
 /**
  * Nep Spotify-client. `data` is een map: playlistId -> { naam, tracks[] }.
@@ -31,11 +47,12 @@ function createFakeSpotifyClient(data = {}) {
   };
 }
 
-function createCatalogusHarness({ spotifyData = {} } = {}) {
+function createCatalogusHarness({ spotifyData = {}, musicBrainzData = {} } = {}) {
   const playlistStore = new InMemoryPlaylistStore();
   const trackStore = new InMemoryTrackStore();
   const artiestStore = new InMemoryArtiestStore();
   const spotifyClient = createFakeSpotifyClient(spotifyData);
+  const musicBrainzClient = createFakeMusicBrainzClient(musicBrainzData);
 
   const service = new PlaylistImportService({
     spotifyClient,
@@ -44,10 +61,21 @@ function createCatalogusHarness({ spotifyData = {} } = {}) {
     artiestStore,
   });
 
-  return { service, playlistStore, trackStore, artiestStore, spotifyClient };
+  const verrijking = new VerrijkingService({ musicBrainzClient, artiestStore });
+
+  return {
+    service,
+    verrijking,
+    playlistStore,
+    trackStore,
+    artiestStore,
+    spotifyClient,
+    musicBrainzClient,
+  };
 }
 
 module.exports = {
   createFakeSpotifyClient,
+  createFakeMusicBrainzClient,
   createCatalogusHarness,
 };
