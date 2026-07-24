@@ -26,11 +26,12 @@ djmusica/
 
 - ✅ Answer Matcher (fuzzy tekstmatching + jaar-tolerantie) — werkend, 18 unit tests, 100% van de functies gedekt.
 - ✅ CI-pipeline (lint + test + testrapport + coverage) opgezet, draait op elke push naar `main` én op elke pull request.
-- 🔨 Auth Service (Fase 4, stap 1) — in aanbouw, per deelstap een aparte pull request:
+- ✅ Auth Service (Fase 4, stap 1) — gebouwd in vier aparte pull requests, elk met tests:
   - ✅ **Stap 1a: Registreren met e-mailverificatie** (FR-33, FR-55, FR-56) — wachtwoordeisen, gelekte-wachtwoorden-check, gehashte opslag, verificatielink, neutrale melding. Zie `backend/src/auth/`.
   - ✅ **Stap 1b: Inloggen + oplopende wachttijd** na 5 mislukte pogingen, per account+IP (FR-35).
   - ✅ **Stap 1c: Wachtwoord vergeten / reset** (resetlink 1 uur, eenmalig, alle sessies uitloggen na reset) (FR-34).
-  - ⬜ Stap 1d: Sessieduur met aftelwaarschuwing (FR-57).
+  - ✅ **Stap 1d: Sessieduur** — 2 uur inactiviteit buiten een spel geeft een 60-seconden-aftelwaarschuwing met "blijf ingelogd"; nooit uitloggen tijdens een actief spel (FR-57).
+  - Doorlopend: beveiligingslogging zonder wachtwoorden/tokens (NFR-14) en gehashte opslag (NFR-11).
 - ⬜ Frontend, Game Engine, Spotify-integratie, beheerder-tools, statistieken, berichten, PWA — zie bouwplan voor de volledige volgorde.
 
 ## Aan de slag

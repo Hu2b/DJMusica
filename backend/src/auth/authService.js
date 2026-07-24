@@ -6,7 +6,7 @@
  *   - STAP 1: registreren met e-mailverificatie (FR-33, FR-55, FR-56)
  *   - STAP 2: inloggen met oplopende wachttijd na 5 mislukte pogingen (FR-35)
  *   - STAP 3: wachtwoord vergeten/reset, alle sessies uitloggen na reset (FR-34)
- * De sessieduur (FR-57) volgt in een latere stap/PR.
+ *   - STAP 4: sessieduur met 60-seconden-aftelwaarschuwing buiten een spel (FR-57)
  *
  * De service krijgt al zijn "hulpstukken" van buitenaf mee (opslag, mailer,
  * gelekt-wachtwoord-check, klok, beveiligingslog, login-afremming). Dat maakt
@@ -19,6 +19,7 @@ const { hashPassword, verifyPassword } = require('./passwordHasher');
 const { TOKEN_TYPES } = require('./tokenStore');
 const { EVENT_TYPES } = require('./securityLog');
 const { normalizeEmail } = require('./userStore');
+const { berekenSessieStatus, SESSIE_TOESTAND } = require('./sessionLifetime');
 
 /**
  * Een vaste, geldige (maar nutteloze) hash. Als er wordt ingelogd op een
@@ -67,6 +68,7 @@ class AuthService {
     pwnedChecker,
     loginThrottle,
     sessionStore,
+    isUserInActiveGame = () => false,
     now = Date.now,
   }) {
     this.userStore = userStore;
@@ -76,6 +78,9 @@ class AuthService {
     this.pwnedChecker = pwnedChecker;
     this.loginThrottle = loginThrottle;
     this.sessionStore = sessionStore;
+    // Injecteerbaar: de Game Engine bepaalt of een account nu in een lopend spel
+    // zit. Buiten deze service weten we dat niet zelf (FR-57).
+    this.isUserInActiveGame = isUserInActiveGame;
     this.now = now;
   }
 
@@ -337,6 +342,84 @@ class AuthService {
       ip,
     });
     return { ok: true, uitgelogdeSessies: uitgelogd };
+  }
+
+  /**
+   * Controleert de toestand van een ingelogde sessie (FR-57). Wordt regelmatig
+   * aangeroepen (bv. vanuit de frontend) om te bepalen of er een
+   * aftelwaarschuwing getoond moet worden of dat er automatisch uitgelogd wordt.
+   *
+   * Buiten een actief spel:
+   *  - < 2 uur na inloggen/verlengen -> ACTIEF;
+   *  - vanaf 2 uur -> WAARSCHUWING met een afteller (secondsRemaining, ~60 -> 0);
+   *  - geen reactie binnen die 60 seconden -> VERLOPEN; de sessie wordt dan
+   *    daadwerkelijk uitgelogd (verwijderd). Opnieuw inloggen kan altijd.
+   * Tijdens een actief spel: altijd ACTIEF, nooit uitloggen.
+   *
+   * @param {object} input
+   * @param {string} input.sessionId
+   * @returns {{ state: string, secondsRemaining?: number, inSpel?: boolean }}
+   */
+  checkSession({ sessionId } = {}) {
+    const sessie = this.sessionStore.get(sessionId);
+    if (!sessie) return { state: 'GEEN_SESSIE' };
+
+    const inSpel = Boolean(this.isUserInActiveGame(sessie.userId));
+    const status = berekenSessieStatus({
+      lastExtendedAt: sessie.lastActivityAt,
+      now: this.now(),
+      inActiveGame: inSpel,
+    });
+
+    if (status.state === SESSIE_TOESTAND.VERLOPEN) {
+      // Automatisch uitloggen: sessie beëindigen en één keer loggen.
+      this.sessionStore.destroy(sessionId);
+      this.securityLog.record(EVENT_TYPES.SESSIE_AUTO_UITGELOGD, { userId: sessie.userId, sessionId });
+      return { state: SESSIE_TOESTAND.VERLOPEN, inSpel: false };
+    }
+
+    if (status.state === SESSIE_TOESTAND.WAARSCHUWING) {
+      // De waarschuwing maar één keer loggen (niet bij elke controle opnieuw).
+      if (!sessie.warningLoggedAt) {
+        this.sessionStore.update(sessionId, { warningLoggedAt: this.now() });
+        this.securityLog.record(EVENT_TYPES.SESSIE_WAARSCHUWING, { userId: sessie.userId, sessionId });
+      }
+      return {
+        state: SESSIE_TOESTAND.WAARSCHUWING,
+        secondsRemaining: status.secondsRemaining,
+        inSpel: false,
+      };
+    }
+
+    return { state: SESSIE_TOESTAND.ACTIEF, inSpel };
+  }
+
+  /**
+   * "Blijf ingelogd" (FR-57): reset de periode met opnieuw 2 uur. De volgende
+   * waarschuwing volgt pas 2 uur later.
+   * @param {object} input
+   * @param {string} input.sessionId
+   * @returns {{ ok: boolean, state?: string }}
+   */
+  extendSession({ sessionId } = {}) {
+    if (!this.sessionStore.isActive(sessionId)) return { ok: false, reden: 'GEEN_SESSIE' };
+    this.sessionStore.update(sessionId, { lastActivityAt: this.now(), warningLoggedAt: null });
+    this.securityLog.record(EVENT_TYPES.SESSIE_VERLENGD, {
+      userId: this.sessionStore.get(sessionId).userId,
+      sessionId,
+    });
+    return { ok: true, state: SESSIE_TOESTAND.ACTIEF };
+  }
+
+  /**
+   * Handmatig uitloggen (FR-57: er is altijd een uitlog-knop).
+   * @param {object} input
+   * @param {string} input.sessionId
+   * @returns {{ ok: boolean }}
+   */
+  logout({ sessionId } = {}) {
+    const bestond = this.sessionStore.destroy(sessionId);
+    return { ok: bestond };
   }
 
   _wachttijdMelding(retryAfterMs) {
