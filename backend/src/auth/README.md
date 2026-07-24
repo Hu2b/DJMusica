@@ -18,6 +18,7 @@ begrijpen, te testen en later te vervangen.
 | `sessionLifetime.js` | Rekent uit of een sessie nog actief is, moet waarschuwen (60-seconden-afteller), of is verlopen — nooit tijdens een spel. (FR-57) |
 | `userStore.js` | Bewaart de accounts. Nu nog in het werkgeheugen; later een echte database, zonder dat de rest hoeft te veranderen. |
 | `securityLog.js` | De "rookmelder": legt beveiligingsgebeurtenissen vast (mislukte login, reset, …) — nooit met wachtwoorden of tokens erin. (NFR-14) |
+| `resendMailer.js` | De **echte** e-mailkoppeling (via Resend) die verificatie- en resetmails verstuurt; leest de API-sleutel uit een omgevingsvariabele. In tests gebruiken we de nep-mailer, niet deze. |
 | `authService.js` | De dirigent: rijgt bovenstaande onderdelen aan elkaar tot de echte handelingen (registreren, verifiëren, …). |
 | `testSupport.js` | Nep-versies van de buitenwereld (mail, klok, lek-check) zodat tests snel draaien zonder internet of database. |
 | `*.test.js` | De automatische tests die bewijzen dat het werkt, gebaseerd op de scenario's in `docs/testset.md`. |

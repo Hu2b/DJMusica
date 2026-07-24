@@ -12,6 +12,8 @@ module.exports = [
         process: 'readonly',
         console: 'readonly',
         Buffer: 'readonly',
+        fetch: 'readonly',
+        URL: 'readonly',
         setTimeout: 'readonly',
         clearTimeout: 'readonly',
         setInterval: 'readonly',
