@@ -33,10 +33,10 @@ djmusica/
   - ✅ **Stap 1d: Sessieduur** — 2 uur inactiviteit buiten een spel geeft een 60-seconden-aftelwaarschuwing met "blijf ingelogd"; nooit uitloggen tijdens een actief spel (FR-57).
   - Doorlopend: beveiligingslogging zonder wachtwoorden/tokens (NFR-14) en gehashte opslag (NFR-11).
   - ✅ **E-mailkoppeling via Resend** (echte verificatie-/resetmails, sleutel uit omgevingsvariabele). Zie `backend/src/auth/resendMailer.js`.
-- 🔨 Beheerder: afspeellijst toevoegen + verrijken (Fase 4, stap 2) — in aanbouw:
+- ✅ Beheerder: afspeellijst toevoegen + verrijken (Fase 4, stap 2) — compleet, in drie PR's met tests:
   - ✅ **Stap 2a: Afspeellijst inladen** via Spotify-URL — nummers + artiesten opslaan, compleetheid/selecteerbaarheid, handmatig uitsluiten, verwijderen (FR-5a, FR-30, FR-12a/12b). Zie `backend/src/catalogus/`.
-  - ✅ **Stap 2b: Land per artiest verrijken** via MusicBrainz — automatisch bij ≥95% zekerheid, anders handmatig (100%, nooit overschreven), canonieke landenlijst (FR-28, FR-28a/28b/28c/28d).
-  - ⬜ Stap 2c: "Ververs"-mechanisme dat wijzigingen detecteert (FR-31).
+  - ✅ **Stap 2b: Land per artiest verrijken** via MusicBrainz — automatisch bij ≥95% zekerheid, anders handmatig (100%, nooit overschreven), Nederlandstalige canonieke landenlijst (FR-28, FR-28a/28b/28c/28d, NFR-8).
+  - ✅ **Stap 2c: "Ververs"-mechanisme** — nieuwe nummers toevoegen, verdwenen nummers op inactief, bekend land hergebruiken zonder herhaalde MusicBrainz-aanroep (FR-31).
 - ⬜ Frontend, Game Engine, Spotify-integratie, beheerder-tools, statistieken, berichten, PWA — zie bouwplan voor de volledige volgorde.
 
 ## Aan de slag
