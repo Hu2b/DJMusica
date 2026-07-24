@@ -37,7 +37,9 @@ djmusica/
   - ✅ **Stap 2a: Afspeellijst inladen** via Spotify-URL — nummers + artiesten opslaan, compleetheid/selecteerbaarheid, handmatig uitsluiten, verwijderen (FR-5a, FR-30, FR-12a/12b). Zie `backend/src/catalogus/`.
   - ✅ **Stap 2b: Land per artiest verrijken** via MusicBrainz — automatisch bij ≥95% zekerheid, anders handmatig (100%, nooit overschreven), Nederlandstalige canonieke landenlijst (FR-28, FR-28a/28b/28c/28d, NFR-8).
   - ✅ **Stap 2c: "Ververs"-mechanisme** — nieuwe nummers toevoegen, verdwenen nummers op inactief, bekend land hergebruiken zonder herhaalde MusicBrainz-aanroep (FR-31).
-- ⬜ Frontend, Game Engine, Spotify-integratie, beheerder-tools, statistieken, berichten, PWA — zie bouwplan voor de volledige volgorde.
+- ✅ Spelleider: eigen Spotify-app koppelen (Fase 4, stap 3) — validatietest, versleutelde opslag van de Client Secret, spelleider-rol activeren (FR-37, FR-38, FR-36, NFR-4). Zie `backend/src/spelleider/`.
+- 🔨 Kernspel-loop (Fase 4, stap 4) — in aanbouw: sessie, lobby, rondes, scoren, eindscherm, join-codes, server-side validatie.
+- ⬜ Frontend, Statistieken, Account verwijderen, Berichten, PWA — zie bouwplan voor de volledige volgorde.
 
 ## Aan de slag
 
